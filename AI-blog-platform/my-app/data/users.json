@@ -4,7 +4,7 @@
     "name": "Muhammad Huzaifa",
     "email": "muhammadhuzaifaai890@gmail.com",
     "password": "$2b$10$yX5jteZEjqgKN2k.f6yjEed1UOtdRDI6qWZkp2quui2Pj8B6uGaGu",
-    "role": "admin",
+    "role": "ADMIN",
     "createdAt": "2025-09-08T13:44:53.576Z"
   },
   {
@@ -12,7 +12,7 @@
     "name": "huzi",
     "email": "engineerhuzi@gmail.com",
     "password": "$2b$10$PYXngFcxJu4XELEUwKVW0.11Zx5ZKfyAuqfNZAWxZfccdEDJaaPsO",
-    "role": "user",
+    "role": "USER",
     "createdAt": "2025-09-08T13:47:16.593Z"
   }
 ]

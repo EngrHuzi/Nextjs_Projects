@@ -5,44 +5,47 @@ import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, BookOpen, Sparkles, Users, LogOut } from "lucide-react"
+import { Loader2, BookOpen, Sparkles, Users, LogOut, Clock, TrendingUp, Star } from "lucide-react"
+import { HeroSection } from "@/components/landing/hero-section"
 
 export default function HomePage() {
   const { isAuthenticated, isLoading, user, logout } = useAuth()
   const router = useRouter()
 
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push("/auth")
-    }
-  }, [isAuthenticated, isLoading, router])
+  // Remove automatic redirect to auth page
+  // Users can now see the landing page first
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     )
   }
 
   if (!isAuthenticated) {
-    return null
+    return <HeroSection />
   }
 
   const handleLogout = () => {
     logout()
-    router.push("/auth")
+    router.push("/")
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+    <div className="bg-gradient-to-br from-background to-muted">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <div className="text-center flex-1">
-              <h1 className="text-4xl font-bold mb-4">Welcome to AI Blog Platform, {user?.name}!</h1>
-              <p className="text-xl text-muted-foreground">
-                Create, manage, and enhance your blog content with AI-powered tools
+              <h1 className="text-4xl font-bold mb-4">
+                Welcome back, {user?.name}! 👋
+              </h1>
+              <p className="text-xl text-muted-foreground mb-2">
+                Ready to create amazing content with AI assistance?
+              </p>
+              <p className="text-lg text-muted-foreground">
+                Your AI-powered blogging journey starts here
               </p>
             </div>
             <Button variant="outline" onClick={handleLogout}>
@@ -103,6 +106,49 @@ export default function HomePage() {
               </CardContent>
             </Card>
           )}
+
+          <div className="grid md:grid-cols-2 gap-6 mt-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-green-600" />
+                  Quick Stats
+                </CardTitle>
+                <CardDescription>Your platform overview</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Total Posts</span>
+                  <span className="font-semibold">0</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Published</span>
+                  <span className="font-semibold text-green-600">0</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Drafts</span>
+                  <span className="font-semibold text-orange-600">0</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-blue-600" />
+                  Recent Activity
+                </CardTitle>
+                <CardDescription>Your latest actions</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-4 text-muted-foreground">
+                  <Star className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p>No recent activity</p>
+                  <p className="text-sm">Start by creating your first blog post!</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>

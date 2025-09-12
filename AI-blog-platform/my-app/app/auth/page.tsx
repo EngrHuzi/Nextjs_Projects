@@ -11,11 +11,11 @@ export default function AuthPage() {
   const router = useRouter()
 
   const handleAuthSuccess = () => {
-    router.push('/blog')
+    router.push('/')
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
+    <div className="bg-gradient-to-br from-background to-muted flex items-center justify-center p-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-2">AI Blog Platform</h1>

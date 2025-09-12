@@ -1,0 +1,16 @@
+{
+  "siteName": "AI Blog Platform",
+  "siteDescription": "A modern blog platform powered by AI",
+  "siteUrl": "http://localhost:3000",
+  "adminEmail": "muhammadhuzaifaai890@gmail.com",
+  "allowRegistration": true,
+  "requireEmailVerification": true,
+  "maxPostsPerUser": 50,
+  "defaultPostStatus": "draft",
+  "enableComments": true,
+  "moderateComments": false,
+  "enableAI": true,
+  "theme": "system",
+  "maintenanceMode": false,
+  "maintenanceMessage": "We're performing scheduled maintenance. Please check back later."
+}

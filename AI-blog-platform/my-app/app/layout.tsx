@@ -3,6 +3,8 @@ import type { Metadata } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { AuthProvider } from "@/contexts/auth-context"
+import { ThemeProvider } from "@/contexts/theme-context"
+import { Footer } from "@/components/layout/footer"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -27,11 +29,15 @@ html {
 }
         `}</style>
       </head>
-      <body>
-        <AuthProvider>{children}</AuthProvider>
-        <footer className="w-full border-t py-6 text-center text-sm text-muted-foreground">
-           Made with ❤️ by Huzi.
-        </footer>
+      <body className="min-h-screen flex flex-col">
+        <ThemeProvider>
+          <AuthProvider>
+            <main className="flex-1">
+              {children}
+            </main>
+            <Footer />
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

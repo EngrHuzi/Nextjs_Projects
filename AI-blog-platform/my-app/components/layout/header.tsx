@@ -2,6 +2,7 @@
 
 import { useAuth } from '@/contexts/auth-context'
 import { UserMenu } from '@/components/auth/user-menu'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
 import { PenTool, Crown } from 'lucide-react'
@@ -26,7 +27,7 @@ export function Header() {
           </a>
         </div>
         
-        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
+        <div className="flex flex-1 items-center justify-between space-x-2">
           <div className="w-full flex-1 md:w-auto md:flex-none">
             <nav className="flex items-center space-x-4">
               <Button
@@ -50,6 +51,7 @@ export function Header() {
           </div>
           
           <div className="flex items-center space-x-2">
+            <ThemeToggle />
             <UserMenu />
           </div>
         </div>
