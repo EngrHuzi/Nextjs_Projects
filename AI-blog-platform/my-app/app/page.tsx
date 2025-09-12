@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, BookOpen, Sparkles, Users, LogOut, Clock, TrendingUp, Star } from "lucide-react"
 import { HeroSection } from "@/components/landing/hero-section"
+import { Header } from "@/components/layout/header"
 
 export default function HomePage() {
   const { isAuthenticated, isLoading, user, logout } = useAuth()
@@ -34,6 +35,7 @@ export default function HomePage() {
 
   return (
     <div className="bg-gradient-to-br from-background to-muted">
+      <Header />
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-8">

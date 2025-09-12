@@ -4,6 +4,7 @@ import { useState } from "react"
 import { BlogList } from "@/components/blog-list"
 import { BlogEditor } from "@/components/blog-editor"
 import { BlogViewer } from "@/components/blog-viewer"
+import { Header } from "@/components/layout/header"
 import type { BlogPost } from "@/lib/blog"
 
 type ViewMode = "list" | "create" | "edit" | "view"
@@ -39,6 +40,7 @@ export default function BlogPage() {
 
   return (
     <div className="bg-gradient-to-br from-background to-muted">
+      <Header />
       {viewMode === "list" && (
         <BlogList onCreatePost={handleCreatePost} onEditPost={handleEditPost} onViewPost={handleViewPost} />
       )}

@@ -11,6 +11,7 @@ import { AdminUsersTable } from "@/components/admin/admin-users-table"
 import { AdminPostsTable } from "@/components/admin/admin-posts-table"
 import { AdminSettings } from "@/components/admin/admin-settings"
 import { AdminStats } from "@/components/admin/admin-stats"
+import { Header } from "@/components/layout/header"
 import type { BlogPost } from "@/lib/blog"
 import type { StoredUser } from "@/lib/user-store"
 
@@ -96,6 +97,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="bg-gradient-to-br from-background to-muted">
+      <Header />
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-2">Admin Dashboard</h1>
