@@ -4,7 +4,7 @@ import { verifyAdminAuth } from "@/lib/admin-auth"
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify admin authentication
@@ -13,7 +13,7 @@ export async function PATCH(
       return NextResponse.json({ success: false, error: authResult.error }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params
     const { role } = await request.json()
 
     if (!role || !["ADMIN", "USER"].includes(role)) {
@@ -49,7 +49,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify admin authentication
@@ -58,7 +58,7 @@ export async function DELETE(
       return NextResponse.json({ success: false, error: authResult.error }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params
 
     const users = await readAllUsers()
     const userIndex = users.findIndex(user => user.id === id)

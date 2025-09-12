@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -28,33 +28,7 @@ export function AdminPostsTable({ onPostUpdate }: AdminPostsTableProps) {
     loadPosts()
   }, [])
 
-  useEffect(() => {
-    filterPosts()
-  }, [posts, searchTerm, statusFilter, categoryFilter])
-
-  const loadPosts = async () => {
-    try {
-      setIsLoading(true)
-      const token = localStorage.getItem("auth_token")
-      if (!token) return
-
-      const response = await fetch("/api/admin/posts", {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
-      })
-      const data = await response.json()
-      if (data.success) {
-        setPosts(data.posts || [])
-      }
-    } catch (error) {
-      console.error("Failed to load posts:", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const filterPosts = () => {
+  const filterPosts = useCallback(() => {
     let filtered = posts
 
     // Filter by search term
@@ -77,6 +51,32 @@ export function AdminPostsTable({ onPostUpdate }: AdminPostsTableProps) {
     }
 
     setFilteredPosts(filtered)
+  }, [posts, searchTerm, statusFilter, categoryFilter])
+
+  useEffect(() => {
+    filterPosts()
+  }, [filterPosts])
+
+  const loadPosts = async () => {
+    try {
+      setIsLoading(true)
+      const token = localStorage.getItem("auth_token")
+      if (!token) return
+
+      const response = await fetch("/api/admin/posts", {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      })
+      const data = await response.json()
+      if (data.success) {
+        setPosts(data.posts || [])
+      }
+    } catch (error) {
+      console.error("Failed to load posts:", error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const updatePostStatus = async (postId: string, newStatus: "draft" | "published") => {
@@ -332,7 +332,7 @@ export function AdminPostsTable({ onPostUpdate }: AdminPostsTableProps) {
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Delete Post</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Are you sure you want to delete "{post.title}"? This action cannot be undone.
+                                  Are you sure you want to delete &quot;{post.title}&quot;? This action cannot be undone.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>

@@ -12,7 +12,6 @@ import {
   BookOpen, 
   Sparkles, 
   Shield,
-  ExternalLink,
   Crown
 } from "lucide-react"
 

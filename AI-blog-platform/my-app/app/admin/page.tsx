@@ -4,16 +4,14 @@ import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Users, FileText, Settings, BarChart3, Eye, Edit, Trash2, Plus } from "lucide-react"
+import { Users, FileText, Settings, BarChart3 } from "lucide-react"
 import { AdminUsersTable } from "@/components/admin/admin-users-table"
 import { AdminPostsTable } from "@/components/admin/admin-posts-table"
 import { AdminSettings } from "@/components/admin/admin-settings"
 import { AdminStats } from "@/components/admin/admin-stats"
 import { Header } from "@/components/layout/header"
 import type { BlogPost } from "@/lib/blog"
-import type { StoredUser } from "@/lib/user-store"
 
 export default function AdminDashboard() {
   const { user, isAuthenticated, isLoading } = useAuth()

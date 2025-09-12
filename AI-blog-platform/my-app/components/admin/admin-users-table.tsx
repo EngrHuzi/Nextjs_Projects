@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, MoreHorizontal, Edit, Trash2, Shield, UserCheck, UserX, RefreshCw } from "lucide-react"
+import { Search, MoreHorizontal, Trash2, Shield, UserX, RefreshCw } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import type { StoredUser } from "@/lib/user-store"
 
@@ -27,9 +27,28 @@ export function AdminUsersTable({ onUserUpdate }: AdminUsersTableProps) {
     loadUsers()
   }, [])
 
+  const filterUsers = useCallback(() => {
+    let filtered = users
+
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(user =>
+        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    }
+
+    // Filter by role
+    if (roleFilter !== "all") {
+      filtered = filtered.filter(user => user.role === roleFilter)
+    }
+
+    setFilteredUsers(filtered)
+  }, [users, searchTerm, roleFilter])
+
   useEffect(() => {
     filterUsers()
-  }, [users, searchTerm, roleFilter])
+  }, [filterUsers])
 
   const loadUsers = async () => {
     try {
@@ -53,24 +72,7 @@ export function AdminUsersTable({ onUserUpdate }: AdminUsersTableProps) {
     }
   }
 
-  const filterUsers = () => {
-    let filtered = users
-
-    // Filter by search term
-    if (searchTerm) {
-      filtered = filtered.filter(user =>
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    }
-
-    // Filter by role
-    if (roleFilter !== "all") {
-      filtered = filtered.filter(user => user.role === roleFilter)
-    }
-
-    setFilteredUsers(filtered)
-  }
+  
 
   const updateUserRole = async (userId: string, newRole: string) => {
     try {

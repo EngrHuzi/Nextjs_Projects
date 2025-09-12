@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getStoredPosts, storePosts, updatePost, deletePost } from "@/lib/blog"
+import { updatePost, deletePost } from "@/lib/blog"
 import { verifyAdminAuth } from "@/lib/admin-auth"
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify admin authentication
@@ -13,7 +13,7 @@ export async function PATCH(
       return NextResponse.json({ success: false, error: authResult.error }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params
     const updates = await request.json()
 
     if (updates.status && !["draft", "published"].includes(updates.status)) {
@@ -44,7 +44,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify admin authentication
@@ -53,7 +53,7 @@ export async function DELETE(
       return NextResponse.json({ success: false, error: authResult.error }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params
 
     const success = deletePost(id)
     
