@@ -5,8 +5,10 @@ import { logger } from "@/lib/logger"
 
 export async function GET(request: NextRequest) {
   try {
-    // Extract token from Authorization header
-    const token = extractTokenFromHeader(request.headers.get("authorization"))
+    // Extract token from httpOnly cookie first, then header as fallback
+    const cookieToken = request.cookies.get("auth_token")?.value || null
+    const headerToken = extractTokenFromHeader(request.headers.get("authorization"))
+    const token = cookieToken || headerToken
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }

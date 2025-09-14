@@ -10,21 +10,27 @@ export interface JWTPayload {
   exp?: number; // expires at
 }
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.NEXT_PUBLIC_AUTH_SECRET || 'fallback-secret-do-not-use-in-production'
+const ACCESS_SECRET = new TextEncoder().encode(
+  process.env.AUTH_ACCESS_SECRET || process.env.AUTH_SECRET || 'fallback-secret-do-not-use-in-production'
+);
+const REFRESH_SECRET = new TextEncoder().encode(
+  process.env.AUTH_REFRESH_SECRET || process.env.AUTH_SECRET || 'fallback-secret-do-not-use-in-production'
 );
 
-const DEFAULT_EXPIRY = '7d'; // 7 days
+const DEFAULT_ACCESS_EXPIRY = process.env.AUTH_ACCESS_EXPIRY || '15m';
+const DEFAULT_REFRESH_EXPIRY = process.env.AUTH_REFRESH_EXPIRY || '7d';
 
-export async function signJWT(payload: Omit<JWTPayload, 'iat' | 'exp'>): Promise<string> {
+export async function signJWT(payload: Omit<JWTPayload, 'iat' | 'exp'>, opts?: { expiry?: string; type?: 'access' | 'refresh' }): Promise<string> {
   try {
-    const expiry = process.env.NEXT_PUBLIC_AUTH_EXPIRY || DEFAULT_EXPIRY;
+    const type = opts?.type || 'access'
+    const expiry = opts?.expiry || (type === 'access' ? DEFAULT_ACCESS_EXPIRY : DEFAULT_REFRESH_EXPIRY)
+    const secret = type === 'access' ? ACCESS_SECRET : REFRESH_SECRET
     
     const token = await new SignJWT({ ...payload })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
       .setExpirationTime(expiry)
-      .sign(JWT_SECRET);
+      .sign(secret);
     
     return token;
   } catch (error) {
@@ -35,10 +41,20 @@ export async function signJWT(payload: Omit<JWTPayload, 'iat' | 'exp'>): Promise
 
 export async function verifyJWT(token: string): Promise<JWTPayload> {
   try {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
+    const { payload } = await jwtVerify(token, ACCESS_SECRET);
     return payload as unknown as JWTPayload;
   } catch (error) {
     logger.error('Error verifying JWT', { error });
+    throw new Error('Invalid token');
+  }
+}
+
+export async function verifyRefreshJWT(token: string): Promise<JWTPayload> {
+  try {
+    const { payload } = await jwtVerify(token, REFRESH_SECRET);
+    return payload as unknown as JWTPayload;
+  } catch (error) {
+    logger.error('Error verifying refresh JWT', { error });
     throw new Error('Invalid token');
   }
 }

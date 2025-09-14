@@ -4,10 +4,30 @@ import { useState } from "react"
 import { BlogList } from "@/components/blog-list"
 import { BlogEditor } from "@/components/blog-editor"
 import { BlogViewer } from "@/components/blog-viewer"
-import { Header } from "@/components/layout/header"
-import type { BlogPost } from "@/lib/blog"
+import { MyPosts } from "@/components/my-posts"
 
-type ViewMode = "list" | "create" | "edit" | "view"
+// Define the BlogPost type that matches the API response
+interface BlogPost {
+  id: string
+  title: string
+  content: string
+  excerpt: string
+  author: {
+    id: string
+    name: string
+    email: string
+  }
+  category: string
+  tags: string[]
+  status: "DRAFT" | "PUBLISHED"
+  createdAt: string
+  updatedAt: string
+  publishedAt?: string
+  readTime: number
+  slug: string
+}
+
+type ViewMode = "list" | "create" | "edit" | "view" | "my-posts"
 
 export default function BlogPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("list")
@@ -38,15 +58,28 @@ export default function BlogPage() {
     setSelectedPost(null)
   }
 
+  const handleMyPosts = () => {
+    setViewMode("my-posts")
+    setSelectedPost(null)
+  }
+
   return (
     <div className="bg-gradient-to-br from-background to-muted">
-      <Header />
       {viewMode === "list" && (
-        <BlogList onCreatePost={handleCreatePost} onEditPost={handleEditPost} onViewPost={handleViewPost} />
+        <BlogList onCreatePost={handleCreatePost} onEditPost={handleEditPost} onViewPost={handleViewPost} onMyPosts={handleMyPosts} />
+      )}
+
+      {viewMode === "my-posts" && (
+        <MyPosts onCreatePost={handleCreatePost} onEditPost={handleEditPost} onViewPost={handleViewPost} />
       )}
 
       {(viewMode === "create" || viewMode === "edit") && (
-        <BlogEditor post={selectedPost || undefined} onSave={handleSavePost} onCancel={handleCancel} />
+        <BlogEditor 
+          key={selectedPost?.id || "new"} 
+          post={selectedPost || undefined} 
+          onSave={handleSavePost} 
+          onCancel={handleCancel} 
+        />
       )}
 
       {viewMode === "view" && selectedPost && (

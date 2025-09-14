@@ -58,13 +58,8 @@ export function AdminSettings() {
   const loadSettings = async () => {
     try {
       setIsLoading(true)
-      const token = localStorage.getItem("auth_token")
-      if (!token) return
-
       const response = await fetch("/api/admin/settings", {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
+        credentials: "include",
       })
       if (response.ok) {
         const data = await response.json()
@@ -84,15 +79,12 @@ export function AdminSettings() {
       setIsSaving(true)
       setSaveStatus("idle")
       
-      const token = localStorage.getItem("auth_token")
-      if (!token) return
-
       const response = await fetch("/api/admin/settings", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify(settings),
       })
 

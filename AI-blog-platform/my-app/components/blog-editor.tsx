@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,10 +11,30 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { createPost, updatePost, type BlogPost, CATEGORIES } from "@/lib/blog"
+import { CATEGORIES } from "@/lib/blog"
+import { fetchWithAuth } from "@/lib/utils"
 import { AIAssistant } from "./ai-assistant"
 import { Save, Eye, X } from "lucide-react"
-import { useAuth } from "@/contexts/auth-context"
+
+interface BlogPost {
+  id: string
+  title: string
+  content: string
+  excerpt: string
+  author: {
+    id: string
+    name: string
+    email: string
+  }
+  category: string
+  tags: string[]
+  status: "DRAFT" | "PUBLISHED"
+  createdAt: string
+  updatedAt: string
+  publishedAt?: string
+  readTime: number
+  slug: string
+}
 
 interface BlogEditorProps {
   post?: BlogPost
@@ -23,16 +43,37 @@ interface BlogEditorProps {
 }
 
 export function BlogEditor({ post, onSave, onCancel }: BlogEditorProps) {
-  const { user } = useAuth()
-  const [title, setTitle] = useState(post?.title || "")
-  const [content, setContent] = useState(post?.content || "")
-  const [excerpt, setExcerpt] = useState(post?.excerpt || "")
-  const [category, setCategory] = useState(post?.category || "")
-  const [tags, setTags] = useState<string[]>(post?.tags || [])
+  const [title, setTitle] = useState("")
+  const [content, setContent] = useState("")
+  const [excerpt, setExcerpt] = useState("")
+  const [category, setCategory] = useState("")
+  const [tags, setTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState("")
-  const [status, setStatus] = useState<"draft" | "published">(post?.status || "draft")
+  const [status, setStatus] = useState<"DRAFT" | "PUBLISHED">("DRAFT")
   const [error, setError] = useState("")
   const [isPreview, setIsPreview] = useState(false)
+
+  // Initialize state when post prop changes
+  useEffect(() => {
+    if (post) {
+      setTitle(post.title || "")
+      setContent(post.content || "")
+      setExcerpt(post.excerpt || "")
+      setCategory(post.category || "")
+      setTags(post.tags || [])
+      setStatus(post.status || "DRAFT")
+    } else {
+      // Reset to default values for new post
+      setTitle("")
+      setContent("")
+      setExcerpt("")
+      setCategory("")
+      setTags([])
+      setStatus("DRAFT")
+    }
+    setError("")
+    setIsPreview(false)
+  }, [post])
 
   const handleAddTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
@@ -45,51 +86,50 @@ export function BlogEditor({ post, onSave, onCancel }: BlogEditorProps) {
     setTags(tags.filter((tag) => tag !== tagToRemove))
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!title.trim() || !content.trim() || !category) {
       setError("Please fill in all required fields")
       return
     }
 
-    // Remove authentication check
-
     try {
-      let savedPost: BlogPost
+      setError("")
+      const postData = {
+        title: title.trim(),
+        content: content.trim(),
+        excerpt: excerpt.trim() || content.trim().substring(0, 150) + "...",
+        category,
+        tags,
+        status,
+      }
 
+      let response: Response
       if (post) {
         // Update existing post
-        const updated = updatePost(post.id, {
-          title: title.trim(),
-          content: content.trim(),
-          excerpt: excerpt.trim() || content.trim().substring(0, 150) + "...",
-          category,
-          tags,
-          status,
+        response = await fetchWithAuth(`/api/posts/${post.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(postData),
         })
-        if (!updated) {
-          setError("Failed to update post")
-          return
-        }
-        savedPost = updated
       } else {
         // Create new post
-        savedPost = createPost({
-          title: title.trim(),
-          content: content.trim(),
-          excerpt: excerpt.trim() || content.trim().substring(0, 150) + "...",
-          author: {
-            id: user?.id || "anonymous",
-            name: user?.name || "Anonymous",
-            email: user?.email || "anonymous@example.com",
-          },
-          category,
-          tags,
-          status,
+        response = await fetchWithAuth("/api/posts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(postData),
         })
       }
 
-      onSave(savedPost)
-    } catch {
+      if (!response.ok) {
+        const errorData = await response.json()
+        setError(errorData.error || "Failed to save post")
+        return
+      }
+
+      const data = await response.json()
+      onSave(data.post)
+    } catch (error) {
+      console.error("Save error:", error)
       setError("Failed to save post")
     }
   }
@@ -102,6 +142,7 @@ export function BlogEditor({ post, onSave, onCancel }: BlogEditorProps) {
   }
 
   const handleTitleSelect = (aiTitle: string) => {
+    console.log("Setting title to:", aiTitle);
     setTitle(aiTitle)
   }
 
@@ -123,17 +164,26 @@ export function BlogEditor({ post, onSave, onCancel }: BlogEditorProps) {
     <div className="max-w-6xl mx-auto p-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">{post ? "Edit Post" : "Create New Post"}</h1>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => setIsPreview(!isPreview)}>
+        <div className="flex items-center gap-2 flex-wrap justify-end sm:flex-nowrap">
+          <Button
+            variant="outline"
+            onClick={() => setIsPreview(!isPreview)}
+            className="w-full sm:w-auto"
+          >
             <Eye className="h-4 w-4 mr-2" />
             {isPreview ? "Edit" : "Preview"}
           </Button>
-          <Button variant="outline" onClick={onCancel}>
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            className="w-full sm:w-auto"
+          >
             Cancel
           </Button>
-          <Button onClick={handleSave}>
+          <Button onClick={handleSave} className="w-full sm:w-auto whitespace-nowrap">
             <Save className="h-4 w-4 mr-2" />
-            Save {status === "published" ? "& Publish" : "Draft"}
+            <span className="hidden xs:inline">Save {status === "PUBLISHED" ? "& Publish" : "Draft"}</span>
+            <span className="inline xs:hidden">Save</span>
           </Button>
         </div>
       </div>
@@ -225,13 +275,13 @@ export function BlogEditor({ post, onSave, onCancel }: BlogEditorProps) {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Status</Label>
-                  <Select value={status} onValueChange={(value: "draft" | "published") => setStatus(value)}>
+                  <Select value={status} onValueChange={(value: "DRAFT" | "PUBLISHED") => setStatus(value)}>
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="published">Published</SelectItem>
+                      <SelectItem value="DRAFT">Draft</SelectItem>
+                      <SelectItem value="PUBLISHED">Published</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

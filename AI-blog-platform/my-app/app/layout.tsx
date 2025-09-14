@@ -5,6 +5,7 @@ import { GeistMono } from "geist/font/mono"
 import { AuthProvider } from "@/contexts/auth-context"
 import { ThemeProvider } from "@/contexts/theme-context"
 import { Footer } from "@/components/layout/footer"
+import { Header } from "@/components/layout/header"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -28,10 +29,12 @@ html {
   --font-mono: ${GeistMono.variable};
 }
         `}</style>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body className="min-h-screen flex flex-col">
         <ThemeProvider>
           <AuthProvider>
+            <Header />
             <main className="flex-1">
               {children}
             </main>

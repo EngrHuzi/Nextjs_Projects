@@ -10,8 +10,27 @@ import { AdminUsersTable } from "@/components/admin/admin-users-table"
 import { AdminPostsTable } from "@/components/admin/admin-posts-table"
 import { AdminSettings } from "@/components/admin/admin-settings"
 import { AdminStats } from "@/components/admin/admin-stats"
-import { Header } from "@/components/layout/header"
-import type { BlogPost } from "@/lib/blog"
+import { fetchWithAuth } from "@/lib/utils"
+// Define the BlogPost type that matches the API response
+interface BlogPost {
+  id: string
+  title: string
+  content: string
+  excerpt: string
+  author: {
+    id: string
+    name: string
+    email: string
+  }
+  category: string
+  tags: string[]
+  status: "DRAFT" | "PUBLISHED"
+  createdAt: string
+  updatedAt: string
+  publishedAt?: string
+  readTime: number
+  slug: string
+}
 
 export default function AdminDashboard() {
   const { user, isAuthenticated, isLoading } = useAuth()
@@ -22,43 +41,71 @@ export default function AdminDashboard() {
     publishedPosts: 0,
     draftPosts: 0,
   })
+  const [posts, setPosts] = useState<BlogPost[]>([])
 
   useEffect(() => {
     if (isAuthenticated && user?.role === "ADMIN") {
       loadStats()
     }
+
+    // Auto-refresh when tab becomes visible
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        loadStats()
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibility)
+
+    // Auto-refresh when localStorage posts change (from other tabs)
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "blog_posts") {
+        loadStats()
+      }
+    }
+    window.addEventListener("storage", handleStorage)
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility)
+      window.removeEventListener("storage", handleStorage)
+    }
   }, [isAuthenticated, user])
 
   const loadStats = async () => {
     try {
-      // Get auth token from localStorage
-      const token = localStorage.getItem("auth_token")
-      if (!token) return
-
       // Load user stats
-      const usersResponse = await fetch("/api/admin/users", {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
-      })
+      const usersResponse = await fetchWithAuth("/api/admin/users")
+      if (!usersResponse.ok) {
+        throw new Error(`Users API failed: ${usersResponse.status}`)
+      }
       const usersData = await usersResponse.json()
       
-      // Load post stats
-      const postsResponse = await fetch("/api/admin/posts", {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
-      })
+      // Load posts from API
+      const postsResponse = await fetchWithAuth("/api/admin/posts")
+      if (!postsResponse.ok) {
+        throw new Error(`Posts API failed: ${postsResponse.status}`)
+      }
       const postsData = await postsResponse.json()
+      const apiPosts: BlogPost[] = postsData.posts || []
       
-      setStats({
+      const newStats = {
         totalUsers: usersData.users?.length || 0,
-        totalPosts: postsData.posts?.length || 0,
-        publishedPosts: postsData.posts?.filter((p: BlogPost) => p.status === "published").length || 0,
-        draftPosts: postsData.posts?.filter((p: BlogPost) => p.status === "draft").length || 0,
-      })
+        totalPosts: apiPosts.length,
+        publishedPosts: apiPosts.filter((p: BlogPost) => p.status === "PUBLISHED").length,
+        draftPosts: apiPosts.filter((p: BlogPost) => p.status === "DRAFT").length,
+      }
+      
+      setStats(newStats)
+      setPosts(apiPosts)
     } catch (error) {
       console.error("Failed to load admin stats:", error)
+      // Set error state or show user-friendly message
+      setStats({
+        totalUsers: 0,
+        totalPosts: 0,
+        publishedPosts: 0,
+        draftPosts: 0,
+      })
+      setPosts([])
     }
   }
 
@@ -95,7 +142,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="bg-gradient-to-br from-background to-muted">
-      <Header />
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-2">Admin Dashboard</h1>
@@ -125,7 +171,7 @@ export default function AdminDashboard() {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-            <AdminStats stats={stats} onRefresh={loadStats} />
+            <AdminStats stats={stats} recentPosts={posts} onRefresh={loadStats} />
           </TabsContent>
 
           <TabsContent value="users" className="space-y-6">

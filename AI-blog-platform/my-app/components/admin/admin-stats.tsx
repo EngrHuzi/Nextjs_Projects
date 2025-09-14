@@ -3,7 +3,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Users, FileText, Eye, Edit, RefreshCw, TrendingUp } from "lucide-react"
+import { Users, FileText, Eye, Edit, RefreshCw, TrendingUp, CalendarClock } from "lucide-react"
+import type { BlogPost } from "@/lib/blog"
 
 interface AdminStatsProps {
   stats: {
@@ -12,10 +13,11 @@ interface AdminStatsProps {
     publishedPosts: number
     draftPosts: number
   }
+  recentPosts?: BlogPost[]
   onRefresh: () => void
 }
 
-export function AdminStats({ stats, onRefresh }: AdminStatsProps) {
+export function AdminStats({ stats, recentPosts = [], onRefresh }: AdminStatsProps) {
   const { totalUsers, totalPosts, publishedPosts, draftPosts } = stats
 
   const statCards = [
@@ -54,6 +56,10 @@ export function AdminStats({ stats, onRefresh }: AdminStatsProps) {
   ]
 
   const publishRate = totalPosts > 0 ? Math.round((publishedPosts / totalPosts) * 100) : 0
+
+  const recent = [...recentPosts]
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    .slice(0, 5)
 
   return (
     <div className="space-y-6">
@@ -126,36 +132,61 @@ export function AdminStats({ stats, onRefresh }: AdminStatsProps) {
 
         <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <CalendarClock className="h-5 w-5" />
+              Recent Activity
+            </CardTitle>
             <CardDescription>
-              Common administrative tasks
+              Latest changes to posts
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <Button 
-              variant="outline" 
-              className="w-full justify-start"
-              onClick={() => window.location.href = "/blog"}
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              View All Posts
-            </Button>
-            <Button 
-              variant="outline" 
-              className="w-full justify-start"
-              onClick={() => window.location.href = "/blog?mode=create"}
-            >
-              <Edit className="h-4 w-4 mr-2" />
-              Create New Post
-            </Button>
-            <Button 
-              variant="outline" 
-              className="w-full justify-start"
-              onClick={onRefresh}
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh Data
-            </Button>
+          <CardContent>
+            {recent.length === 0 ? (
+              <div className="text-center py-6 text-muted-foreground text-sm">
+                No recent activity
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {recent.map((post) => (
+                  <div key={post.id} className="flex items-start justify-between">
+                    <div className="min-w-0">
+                      <div className="font-medium truncate max-w-[220px]">{post.title}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {post.status === "PUBLISHED" ? "Published" : "Updated"} • {new Date(post.updatedAt).toLocaleString()}
+                      </div>
+                    </div>
+                    <Badge variant={post.status === "PUBLISHED" ? "default" : "secondary"}>
+                      {post.status}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="mt-4 flex gap-2">
+              <Button 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => window.location.href = "/blog"}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                View Posts
+              </Button>
+              <Button 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => window.location.href = "/blog?mode=create"}
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                New Post
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={onRefresh}
+                className="shrink-0"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>

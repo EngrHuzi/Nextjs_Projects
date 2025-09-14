@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getStoredPosts } from "@/lib/blog"
 import { verifyAdminAuth } from "@/lib/admin-auth"
+import { prisma } from "@/lib/db"
+import { logger } from "@/lib/logger"
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,12 +11,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: authResult.error }, { status: 401 })
     }
 
-    // Get all posts
-    const posts = getStoredPosts()
+    // Get all posts from database
+    const posts = await prisma.post.findMany({
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: { updatedAt: "desc" },
+    })
     
     return NextResponse.json({ success: true, posts })
   } catch (error) {
-    console.error("Error fetching posts:", error)
+    logger.error("Error fetching posts:", error)
     return NextResponse.json(
       { success: false, error: "Failed to fetch posts" },
       { status: 500 }

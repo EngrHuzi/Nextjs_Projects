@@ -3,12 +3,12 @@ import { logger } from "@/lib/logger"
 
 export async function POST() {
   try {
-    // In a real application with HTTP-only cookies, we would clear them here
-    // Since we're using localStorage in the client, the actual token removal happens client-side
-    // This endpoint is mainly for logging and potential future server-side cleanup
-    
+    const res = NextResponse.json({ success: true })
+    // Clear cookie
+    res.cookies.set("auth_token", "", { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 0 })
+    res.cookies.set("refresh_token", "", { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/api/auth", maxAge: 0 })
     logger.info("User logged out")
-    return NextResponse.json({ success: true })
+    return res
   } catch (err) {
     logger.error("Logout error", { error: err })
     return NextResponse.json({ error: "Failed to logout" }, { status: 500 })

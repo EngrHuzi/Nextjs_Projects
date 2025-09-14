@@ -10,7 +10,7 @@ export interface BlogPost {
   }
   category: string
   tags: string[]
-  status: "draft" | "published"
+  status: "DRAFT" | "PUBLISHED"
   createdAt: string
   updatedAt: string
   publishedAt?: string
@@ -25,6 +25,7 @@ export const getStoredPosts = (): BlogPost[] => {
   const posts = localStorage.getItem(POSTS_KEY)
   return posts ? JSON.parse(posts) : []
 }
+
 
 export const storePosts = (posts: BlogPost[]): void => {
   if (typeof window === "undefined") return
@@ -45,7 +46,7 @@ export const createPost = (
     readTime,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    publishedAt: postData.status === "published" ? new Date().toISOString() : undefined,
+    publishedAt: postData.status === "PUBLISHED" ? new Date().toISOString() : undefined,
   }
 
   posts.unshift(newPost)
@@ -66,7 +67,7 @@ export const updatePost = (id: string, updates: Partial<BlogPost>): BlogPost | n
     slug: updates.title ? generateSlug(updates.title) : posts[index].slug,
     readTime: updates.content ? calculateReadTime(updates.content) : posts[index].readTime,
     publishedAt:
-      updates.status === "published" && posts[index].status !== "published"
+      updates.status === "PUBLISHED" && posts[index].status !== "PUBLISHED"
         ? new Date().toISOString()
         : posts[index].publishedAt,
   }
@@ -97,7 +98,7 @@ export const getPostBySlug = (slug: string): BlogPost | null => {
 }
 
 export const getPublishedPosts = (): BlogPost[] => {
-  return getStoredPosts().filter((post) => post.status === "published")
+  return getStoredPosts().filter((post) => post.status === "PUBLISHED")
 }
 
 const generateSlug = (title: string): string => {

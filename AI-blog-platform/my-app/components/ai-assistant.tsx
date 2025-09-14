@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog"
 import { Sparkles, Lightbulb, Search, Wand2, Loader2, Copy, Check } from "lucide-react"
 import type { TitleSuggestion, ContentSummary, SEOKeywords } from "@/lib/ai"
+import { useAuth } from "@/contexts/auth-context"
 
 interface AIAssistantProps {
   title: string
@@ -35,13 +36,16 @@ export function AIAssistant({
   onContentUpdate,
   onTagsUpdate,
 }: AIAssistantProps) {
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false)
+  const [loadingAction, setLoadingAction] = useState<
+    null | "titles" | "summary" | "seo" | "improve"
+  >(null)
   const [titleSuggestions, setTitleSuggestions] = useState<TitleSuggestion[]>([])
   const [summary, setSummary] = useState<ContentSummary | null>(null)
   const [seoData, setSeoData] = useState<SEOKeywords | null>(null)
-  const [error, setError] = useState("")
+  const [error, setError] = useState<string | null>("")
   const [copiedStates, setCopiedStates] = useState<{ [key: string]: boolean }>({})
-
   const handleCopy = async (text: string, key: string) => {
     try {
       await navigator.clipboard.writeText(text)
@@ -54,33 +58,68 @@ export function AIAssistant({
     }
   }
 
+
+  if (!user) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            AI Assistant
+          </CardTitle>
+          <CardDescription>
+            Please log in to use AI-powered blog features.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+
+  // Generate title suggestions using the dedicated API
   const generateTitleSuggestions = async () => {
     if (!content || content.length < 50) {
       setError("Please write at least 50 characters of content first")
       return
     }
 
-    setIsLoading(true)
-    setError("")
-
+    setIsLoading(true);
+    setLoadingAction("titles");
+    setError(null);
     try {
       const response = await fetch("/api/ai/suggest-titles", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content, category }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to generate titles")
+        throw new Error(data.error || "Failed to generate title suggestions");
       }
 
-      setTitleSuggestions(data.suggestions)
+      console.log("Title suggestions response:", data); // Debug log
+
+      // Ensure we have suggestions array
+      if (!data.suggestions || !Array.isArray(data.suggestions)) {
+        throw new Error("Invalid response format from AI service");
+      }
+
+      // Format suggestions into the expected structure
+      const formattedSuggestions = data.suggestions.map((suggestion: { title?: string; text?: string; reason?: string }, index: number) => ({
+        id: `title-${index}`,
+        text: suggestion.title || suggestion.text || "",
+        reason: suggestion.reason || ""
+      }));
+      
+      console.log("Formatted suggestions:", formattedSuggestions); // Debug log
+      setTitleSuggestions(formattedSuggestions);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to generate title suggestions")
+      console.error("Title suggestions error:", err);
+      setError(err instanceof Error ? err.message : "Failed to generate title suggestions");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
+      setLoadingAction(null);
     }
   }
 
@@ -91,6 +130,7 @@ export function AIAssistant({
     }
 
     setIsLoading(true)
+    setLoadingAction("summary")
     setError("")
 
     try {
@@ -111,6 +151,7 @@ export function AIAssistant({
       setError(err instanceof Error ? err.message : "Failed to generate summary")
     } finally {
       setIsLoading(false)
+      setLoadingAction(null)
     }
   }
 
@@ -121,6 +162,7 @@ export function AIAssistant({
     }
 
     setIsLoading(true)
+    setLoadingAction("seo")
     setError("")
 
     try {
@@ -141,6 +183,7 @@ export function AIAssistant({
       setError(err instanceof Error ? err.message : "Failed to generate SEO keywords")
     } finally {
       setIsLoading(false)
+      setLoadingAction(null)
     }
   }
 
@@ -151,6 +194,7 @@ export function AIAssistant({
     }
 
     setIsLoading(true)
+    setLoadingAction("improve")
     setError("")
 
     try {
@@ -171,6 +215,7 @@ export function AIAssistant({
       setError(err instanceof Error ? err.message : "Failed to improve content")
     } finally {
       setIsLoading(false)
+      setLoadingAction(null)
     }
   }
 
@@ -191,24 +236,24 @@ export function AIAssistant({
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-          <Button className="w-full justify-center gap-2 whitespace-normal break-words text-center" variant="outline" size="lg" onClick={generateTitleSuggestions} disabled={isLoading}>
-            {isLoading ? <Loader2 className="h-5 w-5 animate-spin shrink-0" /> : <Lightbulb className="h-5 w-5 shrink-0" />}
+          <Button className="w-full justify-center gap-2 whitespace-normal break-words text-center" variant="outline" size="lg" onClick={generateTitleSuggestions} disabled={isLoading && loadingAction !== "titles" ? true : loadingAction === "titles"}>
+            {loadingAction === "titles" ? <Loader2 className="h-5 w-5 animate-spin shrink-0" /> : <Lightbulb className="h-5 w-5 shrink-0" />}
             <span>Suggest Titles</span>
           </Button>
 
-          <Button className="w-full justify-center gap-2 whitespace-normal break-words text-center" variant="outline" size="lg" onClick={generateSummary} disabled={isLoading}>
-            {isLoading ? <Loader2 className="h-5 w-5 animate-spin shrink-0" /> : <Search className="h-5 w-5 shrink-0" />}
+          <Button className="w-full justify-center gap-2 whitespace-normal break-words text-center" variant="outline" size="lg" onClick={generateSummary} disabled={isLoading && loadingAction !== "summary" ? true : loadingAction === "summary"}>
+            {loadingAction === "summary" ? <Loader2 className="h-5 w-5 animate-spin shrink-0" /> : <Search className="h-5 w-5 shrink-0" />}
             <span>Summarize</span>
           </Button>
 
-          <Button className="w-full justify-center gap-2 whitespace-normal break-words text-center" variant="outline" size="lg" onClick={generateSEOKeywords} disabled={isLoading}>
-            {isLoading ? <Loader2 className="h-5 w-5 animate-spin shrink-0" /> : <Search className="h-5 w-5 shrink-0" />}
+          <Button className="w-full justify-center gap-2 whitespace-normal break-words text-center" variant="outline" size="lg" onClick={generateSEOKeywords} disabled={isLoading && loadingAction !== "seo" ? true : loadingAction === "seo"}>
+            {loadingAction === "seo" ? <Loader2 className="h-5 w-5 animate-spin shrink-0" /> : <Search className="h-5 w-5 shrink-0" />}
             <span>SEO Keywords</span>
           </Button>
 
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="w-full justify-center gap-2 whitespace-normal break-words text-center" variant="outline" size="lg" disabled={isLoading}>
+              <Button className="w-full justify-center gap-2 whitespace-normal break-words text-center" variant="outline" size="lg" disabled={isLoading && loadingAction !== "improve" ? true : loadingAction === "improve"}>
                 <Wand2 className="h-5 w-5" />
                 <span>Improve Content</span>
               </Button>
@@ -272,7 +317,10 @@ export function AIAssistant({
                             <Copy className="h-3 w-3" />
                           )}
                         </Button>
-                        <Button size="sm" onClick={() => onTitleSelect(suggestion.title)}>
+                        <Button size="sm" onClick={() => {
+                          console.log("Using title:", suggestion.title);
+                          onTitleSelect(suggestion.title);
+                        }}>
                           Use
                         </Button>
                       </div>

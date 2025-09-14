@@ -16,8 +16,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { deleteComment, updateComment, type Comment } from "@/lib/comments"
+import { deleteComment, updateComment, toggleCommentLike, type Comment } from "@/lib/comments"
 import { CommentForm } from "./comment-form"
+import { useAuth } from "@/contexts/auth-context"
+import { useRelativeTime } from "@/hooks/use-relative-time"
 import { Heart, Reply, Edit, Trash2, MoreHorizontal, Check, X } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Textarea } from "@/components/ui/textarea"
@@ -29,30 +31,21 @@ interface CommentItemProps {
 }
 
 export function CommentItem({ comment, onCommentUpdate, level = 0 }: CommentItemProps) {
+  const { user } = useAuth()
   const [showReplyForm, setShowReplyForm] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [editContent, setEditContent] = useState(comment.content)
-  const [isLiked] = useState(false) // Disable likes for now
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60)
-
-    if (diffInHours < 1) {
-      return "Just now"
-    } else if (diffInHours < 24) {
-      return `${Math.floor(diffInHours)}h ago`
-    } else if (diffInHours < 168) {
-      return `${Math.floor(diffInHours / 24)}d ago`
-    } else {
-      return date.toLocaleDateString()
-    }
-  }
+  const [isLiked, setIsLiked] = useState(comment.likedBy.includes(user?.id || ""))
+  const relativeTime = useRelativeTime(comment.createdAt)
 
   const handleLike = () => {
-    // Disable likes for now
-    return
+    if (!user?.id) return
+    
+    const updatedComment = toggleCommentLike(comment.id, user.id)
+    if (updatedComment) {
+      setIsLiked(updatedComment.likedBy.includes(user.id))
+      onCommentUpdate()
+    }
   }
 
   const handleDelete = () => {
@@ -102,7 +95,7 @@ export function CommentItem({ comment, onCommentUpdate, level = 0 }: CommentItem
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2">
                 <span className="font-medium text-sm">{comment.author.name}</span>
-                <span className="text-xs text-muted-foreground">{formatDate(comment.createdAt)}</span>
+                <span className="text-xs text-muted-foreground">{relativeTime}</span>
                 {comment.isEdited && (
                   <Badge variant="outline" className="text-xs">
                     Edited
@@ -147,8 +140,8 @@ export function CommentItem({ comment, onCommentUpdate, level = 0 }: CommentItem
                   variant="ghost"
                   size="sm"
                   onClick={handleLike}
-                  className={`h-8 px-2 ${isLiked ? "text-red-500" : ""}`}
-                  disabled={true}
+                  className={`h-8 px-2 ${isLiked ? "text-red-500" : "text-muted-foreground hover:text-red-500"}`}
+                  disabled={!user?.id}
                 >
                   <Heart className={`h-3 w-3 mr-1 ${isLiked ? "fill-current" : ""}`} />
                   <span className="text-xs">{comment.likes}</span>

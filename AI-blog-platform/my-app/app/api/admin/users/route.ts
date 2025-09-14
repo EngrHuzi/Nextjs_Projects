@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import { readAllUsers } from "@/lib/user-store"
 import { verifyAdminAuth } from "@/lib/admin-auth"
+import { prisma } from "@/lib/db"
+import { logger } from "@/lib/logger"
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,21 +11,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: authResult.error }, { status: 401 })
     }
     
-    // Get all users
-    const users = await readAllUsers()
-    
-    // Remove password from response
-    const safeUsers = users.map(user => ({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      createdAt: user.createdAt,
-    }))
+    // Get all users from database
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "desc" },
+    })
 
-    return NextResponse.json({ success: true, users: safeUsers })
+    return NextResponse.json({ success: true, users })
   } catch (error) {
-    console.error("Error fetching users:", error)
+    logger.error("Error fetching users:", error)
     return NextResponse.json(
       { success: false, error: "Failed to fetch users" },
       { status: 500 }

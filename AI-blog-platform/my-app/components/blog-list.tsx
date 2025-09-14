@@ -17,65 +17,89 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { getStoredPosts, deletePost, type BlogPost, CATEGORIES } from "@/lib/blog"
+import { CATEGORIES } from "@/lib/blog"
+import { useAuth } from "@/contexts/auth-context"
+import { CommunityStats } from "./community-stats"
+
+// Define the BlogPost type that matches the API response
+interface BlogPost {
+  id: string
+  title: string
+  content: string
+  excerpt: string
+  author: {
+    id: string
+    name: string
+    email: string
+  }
+  category: string
+  tags: string[]
+  status: "DRAFT" | "PUBLISHED"
+  createdAt: string
+  updatedAt: string
+  publishedAt?: string
+  readTime: number
+  slug: string
+}
 import { Plus, Search, Edit, Trash2, Eye, Clock, Calendar } from "lucide-react"
 
 interface BlogListProps {
   onCreatePost: () => void
   onEditPost: (post: BlogPost) => void
   onViewPost: (post: BlogPost) => void
+  onMyPosts: () => void
 }
 
-export function BlogList({ onCreatePost, onEditPost, onViewPost }: BlogListProps) {
+export function BlogList({ onCreatePost, onEditPost, onViewPost, onMyPosts }: BlogListProps) {
+  const { user } = useAuth()
   const [posts, setPosts] = useState<BlogPost[]>([])
   const [filteredPosts, setFilteredPosts] = useState<BlogPost[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
-  const [statusFilter, setStatusFilter] = useState("all")
+  const [counts, setCounts] = useState({ published: 0, draft: 0, total: 0 })
 
-  const loadPosts = useCallback(() => {
-    const allPosts = getStoredPosts()
-    setPosts(allPosts)
-  }, [])
+  const loadPosts = useCallback(async () => {
+    try {
+      const params = new URLSearchParams()
+      if (categoryFilter !== "all") params.append("category", categoryFilter)
+      if (searchTerm) params.append("search", searchTerm)
+
+      // Always fetch published posts from all users for community view
+      const res = await fetch(`/api/posts/published?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setPosts(data.posts || []);
+        // For community view, we only show published posts
+        setCounts({ published: data.posts?.length || 0, draft: 0, total: data.posts?.length || 0 });
+      } else {
+        setPosts([]);
+        setCounts({ published: 0, draft: 0, total: 0 });
+      }
+    } catch {
+      setPosts([]);
+      setCounts({ published: 0, draft: 0, total: 0 });
+    }
+  }, [categoryFilter, searchTerm]);
 
   useEffect(() => {
-    loadPosts()
-  }, [loadPosts])
+    loadPosts();
+  }, [loadPosts]);
 
-  const filterPosts = useCallback(() => {
-    let filtered = posts
-
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (post) =>
-          post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          post.tags.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase())),
-      )
-    }
-
-    if (categoryFilter !== "all") {
-      filtered = filtered.filter((post) => post.category === categoryFilter)
-    }
-
-    if (statusFilter !== "all") {
-      filtered = filtered.filter((post) => post.status === statusFilter)
-    }
-
-    setFilteredPosts(filtered)
-  }, [posts, searchTerm, categoryFilter, statusFilter])
-
+  // Since filtering is now done on the server side, we just set filteredPosts to posts
   useEffect(() => {
-    filterPosts()
-  }, [filterPosts])
+    setFilteredPosts(posts)
+  }, [posts])
 
   
 
-  const handleDeletePost = (postId: string) => {
-    if (deletePost(postId)) {
-      loadPosts()
+  const handleDelete = async (post: BlogPost) => {
+    try {
+      await fetch(`/api/posts/${post.id}`, { method: "DELETE" });
+      await loadPosts(); // refetch from API after delete
+    } catch {
+      // Optionally, set an error state or show a toast
     }
-  }
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -87,22 +111,34 @@ export function BlogList({ onCreatePost, onEditPost, onViewPost }: BlogListProps
 
   return (
     <div className="max-w-6xl mx-auto p-6">
+      <CommunityStats />
+      
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Blog Posts</h1>
-          <p className="text-muted-foreground">Manage your blog content</p>
+          <h1 className="text-3xl font-bold">Community Blog</h1>
+          <p className="text-muted-foreground">Discover and share amazing content from our community</p>
+          <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+            <span>{counts.total} published posts</span>
+            <span>•</span>
+            <span>From {new Set(posts.map(p => p.author.id)).size} authors</span>
+          </div>
         </div>
-        <Button onClick={onCreatePost}>
-          <Plus className="h-4 w-4 mr-2" />
-          New Post
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={onMyPosts}>
+            My Posts
+          </Button>
+          <Button onClick={onCreatePost}>
+            <Plus className="h-4 w-4 mr-2" />
+            Write Post
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search posts..."
+            placeholder="Search posts, authors, tags..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -119,16 +155,6 @@ export function BlogList({ onCreatePost, onEditPost, onViewPost }: BlogListProps
                 {category}
               </SelectItem>
             ))}
-          </SelectContent>
-        </Select>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-32">
-            <SelectValue placeholder="All Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="published">Published</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -160,7 +186,9 @@ export function BlogList({ onCreatePost, onEditPost, onViewPost }: BlogListProps
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <Badge variant={post.status === "published" ? "default" : "secondary"}>{post.status}</Badge>
+                      <Badge variant={post.status === "PUBLISHED" ? "default" : "secondary"}>
+                        {post.status === "PUBLISHED" ? "Published" : "Draft"}
+                      </Badge>
                       <Badge variant="outline">{post.category}</Badge>
                     </div>
                     <CardTitle className="text-xl mb-2">{post.title}</CardTitle>
@@ -170,14 +198,14 @@ export function BlogList({ onCreatePost, onEditPost, onViewPost }: BlogListProps
                     <Button variant="ghost" size="sm" onClick={() => onViewPost(post)}>
                       <Eye className="h-4 w-4" />
                     </Button>
-                    {true && (
+                    {user?.id === post.author.id && (
                       <>
-                        <Button variant="ghost" size="sm" onClick={() => onEditPost(post)}>
+                        <Button variant="ghost" size="sm" onClick={() => onEditPost(post)} title="Edit your post">
                           <Edit className="h-4 w-4" />
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="sm" title="Delete your post">
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </AlertDialogTrigger>
@@ -190,7 +218,7 @@ export function BlogList({ onCreatePost, onEditPost, onViewPost }: BlogListProps
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeletePost(post.id)}>Delete</AlertDialogAction>
+                              <AlertDialogAction onClick={() => handleDelete(post)}>Delete</AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
@@ -209,7 +237,11 @@ export function BlogList({ onCreatePost, onEditPost, onViewPost }: BlogListProps
                     </div>
                     <div className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
-                      <span>{formatDate(post.createdAt)}</span>
+                      <span>
+                        {post.status === "PUBLISHED" && post.publishedAt
+                          ? formatDate(post.publishedAt)
+                          : formatDate(post.createdAt)}
+                      </span>
                     </div>
                   </div>
                   {post.tags.length > 0 && (

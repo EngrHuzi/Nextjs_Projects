@@ -3,12 +3,13 @@ import { verifyJWT } from "./jwt"
 
 export async function verifyAdminAuth(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization")
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return { success: false, error: "No authorization header" }
+    const cookieToken = request.cookies.get("auth_token")?.value || null
+    const header = request.headers.get("authorization")
+    const headerToken = header && header.startsWith("Bearer ") ? header.replace("Bearer ", "") : null
+    const token = cookieToken || headerToken
+    if (!token) {
+      return { success: false, error: "Unauthorized" }
     }
-
-    const token = authHeader.replace("Bearer ", "")
     const decoded = await verifyJWT(token)
     
     if (!decoded || decoded.role !== "ADMIN") {

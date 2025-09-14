@@ -4,7 +4,26 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import type { BlogPost } from "@/lib/blog"
+// Define the BlogPost type that matches the API response
+interface BlogPost {
+  id: string
+  title: string
+  content: string
+  excerpt: string
+  author: {
+    id: string
+    name: string
+    email: string
+  }
+  category: string
+  tags: string[]
+  status: "DRAFT" | "PUBLISHED"
+  createdAt: string
+  updatedAt: string
+  publishedAt?: string
+  readTime: number
+  slug: string
+}
 import { CommentSection } from "@/components/comment-section"
 import { ArrowLeft, Edit, Clock, Calendar, User } from "lucide-react"
 
@@ -44,7 +63,7 @@ export function BlogViewer({ post, onBack, onEdit }: BlogViewerProps) {
         <Card>
           <CardHeader className="space-y-4">
             <div className="flex items-center gap-2">
-              <Badge variant={post.status === "published" ? "default" : "secondary"}>{post.status}</Badge>
+              <Badge variant={post.status === "PUBLISHED" ? "default" : "secondary"}>{post.status}</Badge>
               <Badge variant="outline">{post.category}</Badge>
             </div>
 

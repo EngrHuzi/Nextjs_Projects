@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, MoreHorizontal, Trash2, Shield, UserX, RefreshCw } from "lucide-react"
+import { Search, MoreHorizontal, Trash2, Shield, UserX, RefreshCw, AlertTriangle } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import type { StoredUser } from "@/lib/user-store"
+import { fetchWithAuth } from "@/lib/utils"
 
 interface AdminUsersTableProps {
   onUserUpdate: () => void
@@ -22,6 +24,7 @@ export function AdminUsersTable({ onUserUpdate }: AdminUsersTableProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [roleFilter, setRoleFilter] = useState("all")
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     loadUsers()
@@ -53,20 +56,17 @@ export function AdminUsersTable({ onUserUpdate }: AdminUsersTableProps) {
   const loadUsers = async () => {
     try {
       setIsLoading(true)
-      const token = localStorage.getItem("auth_token")
-      if (!token) return
-
-      const response = await fetch("/api/admin/users", {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
-      })
+      setError(null)
+      const response = await fetchWithAuth("/api/admin/users")
       const data = await response.json()
       if (data.success) {
         setUsers(data.users || [])
+      } else {
+        setError(data.error || "Failed to load users")
       }
     } catch (error) {
       console.error("Failed to load users:", error)
+      setError("Failed to load users. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -76,45 +76,39 @@ export function AdminUsersTable({ onUserUpdate }: AdminUsersTableProps) {
 
   const updateUserRole = async (userId: string, newRole: string) => {
     try {
-      const token = localStorage.getItem("auth_token")
-      if (!token) return
-
-      const response = await fetch(`/api/admin/users/${userId}`, {
+      const response = await fetchWithAuth(`/api/admin/users/${userId}`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ role: newRole }),
       })
 
       if (response.ok) {
         await loadUsers()
         onUserUpdate()
+      } else {
+        const data = await response.json()
+        setError(data.error || "Failed to update user role")
       }
     } catch (error) {
       console.error("Failed to update user role:", error)
+      setError("Failed to update user role. Please try again.")
     }
   }
 
   const deleteUser = async (userId: string) => {
     try {
-      const token = localStorage.getItem("auth_token")
-      if (!token) return
-
-      const response = await fetch(`/api/admin/users/${userId}`, {
-        method: "DELETE",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
-      })
+      const response = await fetchWithAuth(`/api/admin/users/${userId}`, { method: "DELETE" })
 
       if (response.ok) {
         await loadUsers()
         onUserUpdate()
+      } else {
+        const data = await response.json()
+        setError(data.error || "Failed to delete user")
       }
     } catch (error) {
       console.error("Failed to delete user:", error)
+      setError("Failed to delete user. Please try again.")
     }
   }
 
@@ -170,6 +164,12 @@ export function AdminUsersTable({ onUserUpdate }: AdminUsersTableProps) {
         </div>
       </CardHeader>
       <CardContent>
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />

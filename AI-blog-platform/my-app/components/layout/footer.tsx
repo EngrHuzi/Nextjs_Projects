@@ -49,11 +49,11 @@ export function Footer() {
 
   return (
     <footer className="bg-background border-t">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="container mx-auto px-4 py-8 md:py-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand Section */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
+          <div className="space-y-4 text-center md:text-left">
+            <div className="flex items-center justify-center md:justify-start space-x-2">
               <div className="p-2 bg-primary/10 rounded-lg">
                 <BookOpen className="h-6 w-6 text-primary" />
               </div>
@@ -66,7 +66,7 @@ export function Footer() {
               Create, manage, and enhance your blog content with AI-powered tools. 
               Write better, publish faster, and grow your audience.
             </p>
-            <div className="flex space-x-2">
+            <div className="flex justify-center md:justify-start space-x-2">
               {footerLinks.social.map((social) => {
                 const Icon = social.icon
                 return (
@@ -88,7 +88,7 @@ export function Footer() {
           </div>
 
           {/* Product Links */}
-          <div className="space-y-4">
+          <div className="space-y-4 text-center md:text-left">
             <h4 className="font-semibold text-sm">Product</h4>
             <ul className="space-y-2">
               {footerLinks.product.map((link) => (
@@ -105,7 +105,7 @@ export function Footer() {
           </div>
 
           {/* Company Links */}
-          <div className="space-y-4">
+          <div className="space-y-4 text-center md:text-left">
             <h4 className="font-semibold text-sm">Company</h4>
             <ul className="space-y-2">
               {footerLinks.company.map((link) => (
@@ -122,7 +122,7 @@ export function Footer() {
           </div>
 
           {/* Resources Links */}
-          <div className="space-y-4">
+          <div className="space-y-4 text-center md:text-left">
             <h4 className="font-semibold text-sm">Resources</h4>
             <ul className="space-y-2">
               {footerLinks.resources.map((link) => (
@@ -142,7 +142,7 @@ export function Footer() {
         <Separator className="my-8" />
 
         {/* Bottom Section */}
-        <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+        <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 text-center md:text-left">
           <div className="flex items-center space-x-4 text-sm text-muted-foreground">
             <span>© {currentYear} AI Blog Platform. All rights reserved.</span>
             <span className="hidden md:inline">•</span>
@@ -185,7 +185,7 @@ export function Footer() {
                   <Sparkles className="h-5 w-5 text-primary" />
                   <span className="font-medium">Quick Access</span>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap justify-center md:justify-end gap-2">
                   <Button variant="outline" size="sm" asChild>
                     <a href="/blog">
                       <BookOpen className="h-4 w-4 mr-2" />

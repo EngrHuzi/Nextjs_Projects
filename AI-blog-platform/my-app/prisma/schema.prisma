@@ -26,7 +26,13 @@ model Post {
   id          String    @id @default(uuid())
   title       String
   content     String    @db.Text
-  published   Boolean   @default(false)
+  excerpt     String?   @db.Text
+  category    String
+  tags        String[]  @default([])
+  status      PostStatus @default(DRAFT)
+  slug        String    @unique
+  readTime    Int       @default(1)
+  publishedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
@@ -48,4 +54,9 @@ model Comment {
 enum Role {
   USER
   ADMIN
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
 }

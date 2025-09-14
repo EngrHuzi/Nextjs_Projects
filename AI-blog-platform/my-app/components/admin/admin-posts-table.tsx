@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, MoreHorizontal, Edit, Trash2, Eye, EyeOff, RefreshCw, ExternalLink } from "lucide-react"
+import { Search, MoreHorizontal, Edit, Trash2, Eye, EyeOff, RefreshCw, ExternalLink, AlertTriangle } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import type { BlogPost } from "@/lib/blog"
+import { fetchWithAuth } from "@/lib/utils"
 
 interface AdminPostsTableProps {
   onPostUpdate: () => void
@@ -23,6 +25,7 @@ export function AdminPostsTable({ onPostUpdate }: AdminPostsTableProps) {
   const [statusFilter, setStatusFilter] = useState("all")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     loadPosts()
@@ -60,66 +63,57 @@ export function AdminPostsTable({ onPostUpdate }: AdminPostsTableProps) {
   const loadPosts = async () => {
     try {
       setIsLoading(true)
-      const token = localStorage.getItem("auth_token")
-      if (!token) return
-
-      const response = await fetch("/api/admin/posts", {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
-      })
+      setError(null)
+      const response = await fetchWithAuth("/api/admin/posts")
       const data = await response.json()
       if (data.success) {
         setPosts(data.posts || [])
+      } else {
+        setError(data.error || "Failed to load posts")
       }
     } catch (error) {
       console.error("Failed to load posts:", error)
+      setError("Failed to load posts. Please try again.")
     } finally {
       setIsLoading(false)
     }
   }
 
-  const updatePostStatus = async (postId: string, newStatus: "draft" | "published") => {
+  const updatePostStatus = async (postId: string, newStatus: "DRAFT" | "PUBLISHED") => {
     try {
-      const token = localStorage.getItem("auth_token")
-      if (!token) return
-
-      const response = await fetch(`/api/admin/posts/${postId}`, {
+      const response = await fetchWithAuth(`/api/admin/posts/${postId}`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       })
 
       if (response.ok) {
         await loadPosts()
         onPostUpdate()
+      } else {
+        const data = await response.json()
+        setError(data.error || "Failed to update post status")
       }
     } catch (error) {
       console.error("Failed to update post status:", error)
+      setError("Failed to update post status. Please try again.")
     }
   }
 
   const deletePost = async (postId: string) => {
     try {
-      const token = localStorage.getItem("auth_token")
-      if (!token) return
-
-      const response = await fetch(`/api/admin/posts/${postId}`, {
-        method: "DELETE",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
-      })
+      const response = await fetchWithAuth(`/api/admin/posts/${postId}`, { method: "DELETE" })
 
       if (response.ok) {
         await loadPosts()
         onPostUpdate()
+      } else {
+        const data = await response.json()
+        setError(data.error || "Failed to delete post")
       }
     } catch (error) {
       console.error("Failed to delete post:", error)
+      setError("Failed to delete post. Please try again.")
     }
   }
 
@@ -133,9 +127,9 @@ export function AdminPostsTable({ onPostUpdate }: AdminPostsTableProps) {
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case "published":
+      case "PUBLISHED":
         return "default"
-      case "draft":
+      case "DRAFT":
         return "secondary"
       default:
         return "outline"
@@ -186,6 +180,12 @@ export function AdminPostsTable({ onPostUpdate }: AdminPostsTableProps) {
         </div>
       </CardHeader>
       <CardContent>
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -202,8 +202,8 @@ export function AdminPostsTable({ onPostUpdate }: AdminPostsTableProps) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="published">Published</SelectItem>
-              <SelectItem value="draft">Draft</SelectItem>
+              <SelectItem value="PUBLISHED">Published</SelectItem>
+              <SelectItem value="DRAFT">Draft</SelectItem>
             </SelectContent>
           </Select>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
@@ -226,15 +226,15 @@ export function AdminPostsTable({ onPostUpdate }: AdminPostsTableProps) {
           </Select>
         </div>
 
-        <div className="rounded-md border">
-          <Table>
+        <div className="overflow-x-auto rounded-md border">
+          <Table className="min-w-[800px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Title</TableHead>
-                <TableHead>Author</TableHead>
-                <TableHead>Category</TableHead>
+                <TableHead className="hidden md:table-cell">Author</TableHead>
+                <TableHead className="hidden md:table-cell">Category</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
+                <TableHead className="hidden md:table-cell">Created</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -259,13 +259,13 @@ export function AdminPostsTable({ onPostUpdate }: AdminPostsTableProps) {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <div>
                         <div className="font-medium">{post.author.name}</div>
                         <div className="text-sm text-muted-foreground">{post.author.email}</div>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <Badge variant="outline">{post.category}</Badge>
                     </TableCell>
                     <TableCell>
@@ -273,7 +273,7 @@ export function AdminPostsTable({ onPostUpdate }: AdminPostsTableProps) {
                         {post.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <div>
                         <div>{formatDate(post.createdAt)}</div>
                         {post.publishedAt && (
@@ -303,16 +303,16 @@ export function AdminPostsTable({ onPostUpdate }: AdminPostsTableProps) {
                             <Edit className="h-4 w-4 mr-2" />
                             Edit Post
                           </DropdownMenuItem>
-                          {post.status === "draft" ? (
+                          {post.status === "DRAFT" ? (
                             <DropdownMenuItem
-                              onClick={() => updatePostStatus(post.id, "published")}
+                              onClick={() => updatePostStatus(post.id, "PUBLISHED")}
                             >
                               <Eye className="h-4 w-4 mr-2" />
                               Publish
                             </DropdownMenuItem>
                           ) : (
                             <DropdownMenuItem
-                              onClick={() => updatePostStatus(post.id, "draft")}
+                              onClick={() => updatePostStatus(post.id, "DRAFT")}
                             >
                               <EyeOff className="h-4 w-4 mr-2" />
                               Unpublish

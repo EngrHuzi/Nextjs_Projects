@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { createComment, type Comment } from "@/lib/comments"
+import { useAuth } from "@/contexts/auth-context"
 import { Send, X } from "lucide-react"
 
 interface CommentFormProps {
@@ -19,6 +20,7 @@ interface CommentFormProps {
 }
 
 export function CommentForm({ postId, parentId, onCommentAdded, onCancel, placeholder }: CommentFormProps) {
+  const { user } = useAuth()
   const [content, setContent] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
@@ -39,9 +41,9 @@ export function CommentForm({ postId, parentId, onCommentAdded, onCancel, placeh
         postId,
         parentId,
         author: {
-          id: "anonymous",
-          name: "Anonymous",
-          email: "anonymous@example.com",
+          id: user?.id || "anonymous",
+          name: user?.name || "Anonymous",
+          email: user?.email || "anonymous@example.com",
         },
         content: content.trim(),
         status: "approved", // Auto-approve all comments
@@ -80,7 +82,7 @@ export function CommentForm({ postId, parentId, onCommentAdded, onCancel, placeh
 
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              Commenting as <span className="font-medium">Anonymous</span>
+              Commenting as <span className="font-medium">{user?.name || "Anonymous"}</span>
             </p>
             <div className="flex gap-2">
               {onCancel && (

@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
+
 async function setupDatabase() {
   try {
     console.log('Setting up database...')
@@ -54,7 +55,9 @@ async function setupDatabase() {
           data: {
             title: 'Welcome to the AI Blog Platform',
             content: 'This is a sample blog post created during database setup. You can edit or delete this post from the admin dashboard.',
-            published: true,
+            category: 'Announcement',
+            slug: 'welcome-to-ai-blog-platform',
+            status: 'PUBLISHED',
             authorId: admin.id,
           },
         })

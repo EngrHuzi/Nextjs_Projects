@@ -35,6 +35,7 @@ export async function POST(request: NextRequest) {
     const usersCount = await prisma.user.count()
     const role = usersCount === 0 ? "ADMIN" : "USER"
 
+
     // Create user in database
     const user = await prisma.user.create({
       data: {
@@ -46,13 +47,19 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Generate JWT token
-    const token = await signJWT({
+    // Generate access and refresh tokens
+    const accessToken = await signJWT({
       sub: user.id,
       name: user.name,
       email: user.email,
       role: user.role,
-    })
+    }, { type: 'access' })
+    const refreshToken = await signJWT({
+      sub: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    }, { type: 'refresh' })
 
     // Create safe user object (without password)
     const safeUser = {
@@ -64,7 +71,22 @@ export async function POST(request: NextRequest) {
     }
 
     logger.info("User registered successfully", { userId: user.id, role })
-    return NextResponse.json({ success: true, user: safeUser, token })
+    const res = NextResponse.json({ success: true, user: safeUser })
+    res.cookies.set("auth_token", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 15,
+    })
+    res.cookies.set("refresh_token", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/api/auth",
+      maxAge: 60 * 60 * 24 * 7,
+    })
+    return res
   } catch (err) {
     if (err instanceof z.ZodError) {
       return NextResponse.json({ error: err.issues.map((issue) => issue.message).join(", ") }, { status: 400 })

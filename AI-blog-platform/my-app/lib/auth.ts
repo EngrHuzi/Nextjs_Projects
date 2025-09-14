@@ -48,10 +48,7 @@ export const authAPI = {
         return { success: false, message: data.error || 'Login failed' }
       }
       
-      // Store the JWT token
-      if (data.token) {
-        localStorage.setItem('auth_token', data.token)
-      }
+      // Token is now set via httpOnly cookie by the server
       
       logger.info('User logged in successfully', { userId: data.user.id })
       return { success: true, user: data.user as User, token: data.token }
@@ -74,10 +71,7 @@ export const authAPI = {
       return { success: false, message: data.error || 'Registration failed' }
     }
     
-    // Store the JWT token
-    if (data.token) {
-      localStorage.setItem('auth_token', data.token)
-    }
+    // Token is now set via httpOnly cookie by the server
     
     logger.info('User registered successfully', { userId: data.user.id })
     return { success: true, user: data.user as User, token: data.token }
@@ -90,18 +84,12 @@ export const authAPI = {
   async logout(): Promise<void> {
     try {
       // Call logout API endpoint
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-        },
-      })
+      await fetch('/api/auth/logout', { method: 'POST' })
     } catch (error) {
       logger.warn('Logout API call failed', { error })
       // Continue with local logout even if API call fails
     } finally {
       // Remove token and user data
-      localStorage.removeItem('auth_token')
       localStorage.removeItem('currentUser')
       logger.info('User logged out')
     }
@@ -109,11 +97,6 @@ export const authAPI = {
 
   async getCurrentUser(): Promise<User | null> {
     try {
-      const token = localStorage.getItem('auth_token')
-      if (!token) {
-        return null
-      }
-      
       // Try to get user from localStorage first for faster loading
       const cachedUser = localStorage.getItem('currentUser')
       if (cachedUser) {
@@ -121,15 +104,10 @@ export const authAPI = {
       }
       
       // If no cached user, fetch from API
-      const res = await fetch('/api/auth/me', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      })
+      const res = await fetch('/api/auth/me')
       
       if (!res.ok) {
         // Token might be invalid or expired
-        localStorage.removeItem('auth_token')
         localStorage.removeItem('currentUser')
         return null
       }
