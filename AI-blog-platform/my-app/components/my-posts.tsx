@@ -20,7 +20,7 @@ import {
 import { CATEGORIES } from "@/lib/blog"
 import { fetchWithAuth } from "@/lib/utils"
 import { Plus, Search, Edit, Trash2, Eye, Clock, Calendar, ArrowLeft } from "lucide-react"
-import Link from "next/link"
+
 
 // Define the BlogPost type that matches the API response
 interface BlogPost {
@@ -47,9 +47,10 @@ interface MyPostsProps {
   onCreatePost: () => void
   onEditPost: (post: BlogPost) => void
   onViewPost: (post: BlogPost) => void
+  onBackToCommunity: () => void
 }
 
-export function MyPosts({ onCreatePost, onEditPost, onViewPost }: MyPostsProps) {
+export function MyPosts({ onCreatePost, onEditPost, onViewPost, onBackToCommunity }: MyPostsProps) {
   const [posts, setPosts] = useState<BlogPost[]>([])
   const [filteredPosts, setFilteredPosts] = useState<BlogPost[]>([])
   const [searchTerm, setSearchTerm] = useState("")
@@ -106,20 +107,18 @@ export function MyPosts({ onCreatePost, onEditPost, onViewPost }: MyPostsProps) 
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
+    <div className="max-w-6xl mx-auto p-6 overflow-x-hidden">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
+        <div className="min-w-0">
           <div className="flex items-center gap-4 mb-2">
-            <Link href="/blog">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Community
-              </Button>
-            </Link>
+            <Button variant="ghost" size="sm" onClick={onBackToCommunity}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Community
+            </Button>
           </div>
           <h1 className="text-3xl font-bold">My Posts</h1>
           <p className="text-muted-foreground">Manage your blog content</p>
-          <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2 text-sm text-muted-foreground">
             <span>{counts.total} total posts</span>
             <span>•</span>
             <span>{counts.published} published</span>
@@ -134,7 +133,7 @@ export function MyPosts({ onCreatePost, onEditPost, onViewPost }: MyPostsProps) 
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="relative flex-1">
+        <div className="relative flex-1 min-w-0">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search your posts..."
@@ -192,18 +191,18 @@ export function MyPosts({ onCreatePost, onEditPost, onViewPost }: MyPostsProps) 
           {filteredPosts.map((post) => (
             <Card key={post.id} className="hover:shadow-md transition-shadow">
               <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
                       <Badge variant={post.status === "PUBLISHED" ? "default" : "secondary"}>
                         {post.status === "PUBLISHED" ? "Published" : "Draft"}
                       </Badge>
                       <Badge variant="outline">{post.category}</Badge>
                     </div>
-                    <CardTitle className="text-xl mb-2">{post.title}</CardTitle>
-                    <CardDescription className="text-sm">{post.excerpt}</CardDescription>
+                    <CardTitle className="text-xl mb-2 break-words">{post.title}</CardTitle>
+                    <CardDescription className="text-sm break-words">{post.excerpt}</CardDescription>
                   </div>
-                  <div className="flex items-center gap-2 ml-4">
+                  <div className="flex items-center gap-2 sm:ml-4">
                     <Button variant="ghost" size="sm" onClick={() => onViewPost(post)}>
                       <Eye className="h-4 w-4" />
                     </Button>
@@ -233,8 +232,8 @@ export function MyPosts({ onCreatePost, onEditPost, onViewPost }: MyPostsProps) 
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-sm text-muted-foreground">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-4">
                     <span>By {post.author.name}</span>
                     <div className="flex items-center gap-1">
                       <Clock className="h-3 w-3" />
@@ -250,7 +249,7 @@ export function MyPosts({ onCreatePost, onEditPost, onViewPost }: MyPostsProps) 
                     </div>
                   </div>
                   {post.tags.length > 0 && (
-                    <div className="flex gap-1">
+                    <div className="flex flex-wrap gap-1">
                       {post.tags.slice(0, 3).map((tag) => (
                         <Badge key={tag} variant="outline" className="text-xs">
                           {tag}

@@ -70,7 +70,12 @@ export default function BlogPage() {
       )}
 
       {viewMode === "my-posts" && (
-        <MyPosts onCreatePost={handleCreatePost} onEditPost={handleEditPost} onViewPost={handleViewPost} />
+        <MyPosts 
+          onCreatePost={handleCreatePost} 
+          onEditPost={handleEditPost} 
+          onViewPost={handleViewPost}
+          onBackToCommunity={() => setViewMode("list")}
+        />
       )}
 
       {(viewMode === "create" || viewMode === "edit") && (

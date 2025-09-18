@@ -2,7 +2,8 @@ import { NextResponse, type NextRequest } from "next/server"
 import { z } from "zod"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/db"
-import { signJWT } from "@/lib/jwt"
+//import { signJWT } from "@/lib/jwt"
+import { sendOtpEmail } from "@/lib/mailer"
 import { logger } from "@/lib/logger"
 import { withDatabaseConnection } from "@/lib/middleware"
 
@@ -36,30 +37,33 @@ export async function POST(request: NextRequest) {
     const role = usersCount === 0 ? "ADMIN" : "USER"
 
 
-    // Create user in database
+    // Create user in database as unverified
     const user = await prisma.user.create({
       data: {
         name,
         email: email.toLowerCase(),
         password: passwordHash,
         role,
+        emailVerified: false,
         updatedAt: new Date(),
       },
     })
 
-    // Generate access and refresh tokens
-    const accessToken = await signJWT({
-      sub: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-    }, { type: 'access' })
-    const refreshToken = await signJWT({
-      sub: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-    }, { type: 'refresh' })
+    // Generate OTP and store with expiry
+    const code = Math.floor(100000 + Math.random() * 900000).toString()
+    const expires = new Date(Date.now() + 10 * 60 * 1000)
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { otpCode: code, otpExpiresAt: expires },
+    })
+
+    // Send OTP email (best-effort)
+    try {
+      await sendOtpEmail(user.email, code)
+    } catch (e) {
+      // If email fails, still return success to allow resend; log error
+      logger.error("Failed to send OTP email", { error: e })
+    }
 
     // Create safe user object (without password)
     const safeUser = {
@@ -70,23 +74,9 @@ export async function POST(request: NextRequest) {
       createdAt: user.createdAt.toISOString(),
     }
 
-    logger.info("User registered successfully", { userId: user.id, role })
-    const res = NextResponse.json({ success: true, user: safeUser })
-    res.cookies.set("auth_token", accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 15,
-    })
-    res.cookies.set("refresh_token", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/api/auth",
-      maxAge: 60 * 60 * 24 * 7,
-    })
-    return res
+    logger.info("User registered successfully; OTP sent", { userId: user.id, role })
+    // Do not set auth cookies until email verified
+    return NextResponse.json({ success: true, requiresVerification: true, user: safeUser })
   } catch (err) {
     if (err instanceof z.ZodError) {
       return NextResponse.json({ error: err.issues.map((issue) => issue.message).join(", ") }, { status: 400 })

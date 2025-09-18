@@ -32,8 +32,11 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showOtp, setShowOtp] = useState(false)
+  const [otp, setOtp] = useState("")
+  const [registeredEmail, setRegisteredEmail] = useState("")
   const [isFirstUser, setIsFirstUser] = useState(false)
-  const { register: registerUser, isLoading } = useAuth()
+  const { register: registerUser, verifyOtp, resendOtp, isLoading } = useAuth()
 
   const {
     register,
@@ -55,6 +58,12 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
     
     const result = await registerUser(data)
     
+    if (result.success && result.requiresVerification) {
+      setRegisteredEmail(data.email)
+      setShowOtp(true)
+      return
+    }
+
     if (result.success) {
       onSuccess?.()
     } else {
@@ -79,6 +88,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
         )}
       </CardHeader>
       <CardContent>
+        {!showOtp ? (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {error && (
             <Alert variant="destructive">
@@ -186,6 +196,40 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
             Create Account
           </Button>
         </form>
+        ) : (
+          <div className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">We sent a 6-digit code to {registeredEmail}. Enter it below to verify.</p>
+              <Label htmlFor="otp">Verification Code</Label>
+              <Input id="otp" inputMode="numeric" maxLength={6} value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))} />
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={async () => {
+                setError(null)
+                const res = await verifyOtp(registeredEmail, otp)
+                if (res.success) {
+                  onSuccess?.()
+                } else {
+                  setError(res.message || 'Verification failed')
+                }
+              }} disabled={isLoading || otp.length !== 6}>
+                Verify Email
+              </Button>
+              <Button type="button" variant="outline" onClick={async () => {
+                setError(null)
+                const res = await resendOtp(registeredEmail)
+                if (!res.success) setError(res.message || 'Failed to resend code')
+              }} disabled={isLoading}>
+                Resend Code
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   )

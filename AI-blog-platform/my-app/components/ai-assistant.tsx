@@ -105,12 +105,13 @@ export function AIAssistant({
         throw new Error("Invalid response format from AI service");
       }
 
-      // Format suggestions into the expected structure
-      const formattedSuggestions = data.suggestions.map((suggestion: { title?: string; text?: string; reason?: string }, index: number) => ({
-        id: `title-${index}`,
-        text: suggestion.title || suggestion.text || "",
-        reason: suggestion.reason || ""
-      }));
+      // Format suggestions into the expected structure (TitleSuggestion has { title, reason })
+      const formattedSuggestions: TitleSuggestion[] = data.suggestions.map(
+        (suggestion: { title?: string; text?: string; reason?: string }) => ({
+          title: suggestion.title || suggestion.text || "",
+          reason: suggestion.reason || "",
+        }),
+      )
       
       console.log("Formatted suggestions:", formattedSuggestions); // Debug log
       setTitleSuggestions(formattedSuggestions);
@@ -304,7 +305,7 @@ export function AIAssistant({
                 {titleSuggestions.map((suggestion, index) => (
                   <div key={index} className="p-2 border rounded-lg">
                     <div className="flex items-center justify-between">
-                      <p className="font-medium text-sm">{suggestion.title}</p>
+                      <p className="font-bold text-sm">{suggestion.title}</p>
                       <div className="flex gap-1">
                         <Button
                           size="sm"

@@ -110,20 +110,20 @@ export function BlogList({ onCreatePost, onEditPost, onViewPost, onMyPosts }: Bl
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="max-w-6xl mx-auto p-6 overflow-x-hidden">
       <CommunityStats />
       
-      <div className="flex items-center justify-between mb-6">
-        <div>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
+        <div className="min-w-0">
           <h1 className="text-3xl font-bold">Community Blog</h1>
           <p className="text-muted-foreground">Discover and share amazing content from our community</p>
-          <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2 text-sm text-muted-foreground">
             <span>{counts.total} published posts</span>
             <span>•</span>
             <span>From {new Set(posts.map(p => p.author.id)).size} authors</span>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={onMyPosts}>
             My Posts
           </Button>
@@ -135,7 +135,7 @@ export function BlogList({ onCreatePost, onEditPost, onViewPost, onMyPosts }: Bl
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="relative flex-1">
+        <div className="relative flex-1 min-w-0">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search posts, authors, tags..."
@@ -179,22 +179,22 @@ export function BlogList({ onCreatePost, onEditPost, onViewPost, onMyPosts }: Bl
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-6">
+        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {filteredPosts.map((post) => (
             <Card key={post.id} className="hover:shadow-md transition-shadow">
               <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
                       <Badge variant={post.status === "PUBLISHED" ? "default" : "secondary"}>
                         {post.status === "PUBLISHED" ? "Published" : "Draft"}
                       </Badge>
                       <Badge variant="outline">{post.category}</Badge>
                     </div>
-                    <CardTitle className="text-xl mb-2">{post.title}</CardTitle>
-                    <CardDescription className="text-sm">{post.excerpt}</CardDescription>
+                    <CardTitle className="text-xl mb-2 break-words">{post.title}</CardTitle>
+                    <CardDescription className="text-sm break-words">{post.excerpt}</CardDescription>
                   </div>
-                  <div className="flex items-center gap-2 ml-4">
+                  <div className="flex items-center gap-2 sm:ml-4">
                     <Button variant="ghost" size="sm" onClick={() => onViewPost(post)}>
                       <Eye className="h-4 w-4" />
                     </Button>
@@ -228,8 +228,8 @@ export function BlogList({ onCreatePost, onEditPost, onViewPost, onMyPosts }: Bl
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-sm text-muted-foreground">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-4">
                     <span>By {post.author.name}</span>
                     <div className="flex items-center gap-1">
                       <Clock className="h-3 w-3" />
@@ -245,7 +245,7 @@ export function BlogList({ onCreatePost, onEditPost, onViewPost, onMyPosts }: Bl
                     </div>
                   </div>
                   {post.tags.length > 0 && (
-                    <div className="flex gap-1">
+                    <div className="flex flex-wrap gap-1">
                       {post.tags.slice(0, 3).map((tag) => (
                         <Badge key={tag} variant="outline" className="text-xs">
                           {tag}

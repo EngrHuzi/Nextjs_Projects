@@ -26,7 +26,9 @@ interface LoginFormProps {
 export function LoginForm({ onSuccess }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { login, isLoading } = useAuth()
+  const [needsVerification, setNeedsVerification] = useState<{ email: string } | null>(null)
+  const { login, verifyOtp, resendOtp, isLoading } = useAuth()
+  const [code, setCode] = useState("")
 
   const {
     register,
@@ -43,7 +45,11 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
     if (result.success) {
       onSuccess?.()
     } else {
-      setError(result.message || 'Login failed')
+      if (result.requiresVerification) {
+        setNeedsVerification({ email: data.email })
+      } else {
+        setError(result.message || 'Login failed')
+      }
     }
   }
 
@@ -56,6 +62,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {!needsVerification ? (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {error && (
             <Alert variant="destructive">
@@ -118,10 +125,39 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             Sign In
           </Button>
         </form>
+        ) : (
+          <div className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            <p className="text-sm text-muted-foreground">Enter the 6-digit code sent to {needsVerification.email}</p>
+            <Label htmlFor="code">Verification Code</Label>
+            <Input id="code" inputMode="numeric" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} />
+            <div className="flex gap-2">
+              <Button onClick={async () => {
+                setError(null)
+                const res = await verifyOtp(needsVerification.email, code)
+                if (res.success) {
+                  onSuccess?.()
+                } else {
+                  setError(res.message || 'Verification failed')
+                }
+              }} disabled={isLoading || code.length !== 6}>Verify</Button>
+              <Button type="button" variant="outline" onClick={async () => {
+                setError(null)
+                const res = await resendOtp(needsVerification.email)
+                if (!res.success) setError(res.message || 'Failed to resend code')
+              }} disabled={isLoading}>Resend</Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
 }
+
 
 
 

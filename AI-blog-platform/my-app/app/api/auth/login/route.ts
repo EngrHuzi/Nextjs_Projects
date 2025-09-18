@@ -34,6 +34,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })
     }
 
+    if (!user.emailVerified) {
+      return NextResponse.json({ requiresVerification: true, error: "Email not verified. Please check your inbox for the code." }, { status: 403 })
+    }
+
     // Generate access and refresh tokens
     const accessToken = await signJWT({
       sub: user.id,

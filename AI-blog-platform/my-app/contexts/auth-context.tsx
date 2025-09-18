@@ -8,6 +8,8 @@ interface AuthContextValue extends AuthState {
 	login: (data: LoginFormData) => Promise<AuthResponse>
 	register: (data: RegisterFormData) => Promise<AuthResponse>
 	logout: () => Promise<void>
+	verifyOtp: (email: string, code: string) => Promise<AuthResponse>
+	resendOtp: (email: string) => Promise<AuthResponse>
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
@@ -54,11 +56,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		try {
 			const { confirmPassword, ...payload } = data
 			const result = await authAPI.register(payload)
+			if (result.success && result.user && !result.requiresVerification) {
+				localStorage.setItem("currentUser", JSON.stringify(result.user))
+				setUser(result.user)
+			}
+			return result
+		} finally {
+			setIsLoading(false)
+		}
+	}
+
+	const verifyOtp = async (email: string, code: string): Promise<AuthResponse> => {
+		setIsLoading(true)
+		try {
+			const result = await authAPI.verifyOtp(email, code)
 			if (result.success && result.user) {
 				localStorage.setItem("currentUser", JSON.stringify(result.user))
 				setUser(result.user)
 			}
 			return result
+		} finally {
+			setIsLoading(false)
+		}
+	}
+
+	const resendOtp = async (email: string): Promise<AuthResponse> => {
+		setIsLoading(true)
+		try {
+			return await authAPI.resendOtp(email)
 		} finally {
 			setIsLoading(false)
 		}
@@ -82,6 +107,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			login,
 			register,
 			logout,
+			verifyOtp,
+			resendOtp,
 		}),
 		[user, isLoading]
 	)
@@ -96,6 +123,7 @@ export function useAuth(): AuthContextValue {
 	}
 	return ctx
 }
+
 
 
 

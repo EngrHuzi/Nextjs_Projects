@@ -31,6 +31,7 @@ export interface AuthResponse {
   user?: User
   token?: string
   message?: string
+  requiresVerification?: boolean
 }
 
 // API-backed auth implementation
@@ -44,6 +45,9 @@ export const authAPI = {
       })
       const data = await res.json()
       if (!res.ok) {
+        if (data && data.requiresVerification) {
+          return { success: false, requiresVerification: true, message: data.error || 'Email not verified' }
+        }
         logger.warn('Login failed', { email, error: data.error })
         return { success: false, message: data.error || 'Login failed' }
       }
@@ -71,7 +75,10 @@ export const authAPI = {
       return { success: false, message: data.error || 'Registration failed' }
     }
     
-    // Token is now set via httpOnly cookie by the server
+    if (data.requiresVerification) {
+      logger.info('User registered; verification required', { email: userData.email })
+      return { success: true, requiresVerification: true, user: data.user as User }
+    }
     
     logger.info('User registered successfully', { userId: data.user.id })
     return { success: true, user: data.user as User, token: data.token }
@@ -122,6 +129,42 @@ export const authAPI = {
     } catch (error) {
       logger.error('Error getting current user', { error })
       return null
+    }
+  }
+,
+  async verifyOtp(email: string, code: string): Promise<AuthResponse> {
+    try {
+      const res = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code })
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        return { success: false, message: data.error || 'Verification failed' }
+      }
+      return { success: true, user: data.user as User }
+    } catch (error) {
+      logger.error('Verify OTP error', { error })
+      return { success: false, message: 'An unexpected error occurred' }
+    }
+  }
+,
+  async resendOtp(email: string): Promise<AuthResponse> {
+    try {
+      const res = await fetch('/api/auth/resend-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        return { success: false, message: data.error || 'Failed to resend code' }
+      }
+      return { success: true }
+    } catch (error) {
+      logger.error('Resend OTP error', { error })
+      return { success: false, message: 'An unexpected error occurred' }
     }
   }
 }
