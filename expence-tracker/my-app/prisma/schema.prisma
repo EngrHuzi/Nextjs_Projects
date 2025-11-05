@@ -1,0 +1,146 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum NotificationMethod {
+  IN_APP
+  EMAIL
+  BOTH
+}
+
+enum TransactionType {
+  EXPENSE
+  INCOME
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  BANK_TRANSFER
+  OTHER
+}
+
+enum SyncOperation {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+enum EntityType {
+  TRANSACTION
+  CATEGORY
+  BUDGET
+}
+
+// Models
+model User {
+  id                String       @id @default(uuid())
+  email             String       @unique @db.VarChar(255)
+  emailVerified     Boolean      @default(false)
+  passwordHash      String       @db.VarChar(255)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  // Password Reset
+  passwordResetToken    String?   @db.VarChar(255)
+  passwordResetExpires  DateTime?
+
+  // Preferences
+  budgetAlertsEnabled    Boolean  @default(true)
+  dailyRemindersEnabled  Boolean  @default(false)
+  reminderTime           String?  @db.VarChar(5)  // HH:MM format
+  notificationMethod     NotificationMethod @default(IN_APP)
+
+  // Relations
+  transactions      Transaction[]
+  categories        Category[]
+  budgets           Budget[]
+  syncQueue         SyncQueueItem[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model Transaction {
+  id              String       @id @default(uuid())
+  userId          String
+  type            TransactionType
+  amount          Decimal      @db.Decimal(10, 2)  // Max: 99,999,999.99
+  category        String       @db.VarChar(100)
+  categoryId      String?      // Optional FK for future category table
+  date            DateTime     @db.Date
+  description     String?      @db.VarChar(200)
+  paymentMethod   PaymentMethod
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  // Relations
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, date])
+  @@index([userId, category])
+  @@map("transactions")
+}
+
+model Category {
+  id              String       @id @default(uuid())
+  userId          String?      // NULL for predefined, set for custom
+  name            String       @db.VarChar(100)
+  type            TransactionType
+  isPredefined    Boolean      @default(false)
+  createdAt       DateTime     @default(now())
+
+  // Relations
+  user            User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  budgets         Budget[]
+
+  @@unique([userId, name, type])  // Unique per user, per type
+  @@index([userId])
+  @@map("categories")
+}
+
+model Budget {
+  id              String       @id @default(uuid())
+  userId          String
+  categoryId      String
+  amount          Decimal      @db.Decimal(10, 2)
+  month           DateTime     @db.Date  // First day of month (YYYY-MM-01)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  // Relations
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category        Category     @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, categoryId, month])  // One budget per category per month
+  @@index([userId])
+  @@index([userId, month])
+  @@map("budgets")
+}
+
+model SyncQueueItem {
+  id              String       @id @default(uuid())
+  userId          String
+  operation       SyncOperation
+  entityType      EntityType
+  entityId        String
+  payload         Json
+  createdAt       DateTime     @default(now())
+  syncedAt        DateTime?
+
+  // Relations
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, syncedAt])
+  @@map("sync_queue")
+}
