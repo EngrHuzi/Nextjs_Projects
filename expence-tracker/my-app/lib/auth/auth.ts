@@ -47,14 +47,19 @@ export const {
           })
 
           if (!user) {
-            return null
+            throw new Error('Invalid email or password')
           }
 
           // Verify password
           const isValidPassword = await verifyPassword(password, user.passwordHash)
 
           if (!isValidPassword) {
-            return null
+            throw new Error('Invalid email or password')
+          }
+
+          // Check if email is verified
+          if (!user.emailVerified) {
+            throw new Error('EMAIL_NOT_VERIFIED')
           }
 
           // Return user object (will be encoded in JWT)
@@ -65,7 +70,8 @@ export const {
           }
         } catch (error) {
           console.error('Auth error:', error)
-          return null
+          // Re-throw the error so it can be caught in the login page
+          throw error
         }
       },
     }),

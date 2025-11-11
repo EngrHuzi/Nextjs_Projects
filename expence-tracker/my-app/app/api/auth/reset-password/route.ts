@@ -1,28 +1,61 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth/password'
-import { passwordResetSchema } from '@/lib/schemas/user'
+import { z } from 'zod'
+import { verifyOTP } from '@/lib/auth/otp'
+
+const passwordResetWithOTPSchema = z.object({
+  email: z.string().email(),
+  otp: z.string().length(6),
+  password: z.string().min(8),
+})
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
     // Validate request body
-    const validatedData = passwordResetSchema.parse(body)
+    const validatedData = passwordResetWithOTPSchema.parse(body)
 
-    // Find user with matching token
-    const user = await prisma.user.findFirst({
-      where: {
-        passwordResetToken: validatedData.token,
-        passwordResetExpires: {
-          gt: new Date(), // Token not expired
-        },
+    // Find user by email
+    const user = await prisma.user.findUnique({
+      where: { email: validatedData.email },
+      select: {
+        id: true,
+        email: true,
+        passwordResetOTP: true,
+        passwordResetExpires: true,
+        passwordResetAttempts: true,
       },
     })
 
     if (!user) {
       return NextResponse.json(
-        { error: 'Invalid or expired reset token' },
+        { error: 'User not found' },
+        { status: 404 }
+      )
+    }
+
+    // Verify OTP
+    const verification = verifyOTP(
+      user.passwordResetOTP,
+      validatedData.otp,
+      user.passwordResetExpires,
+      5,
+      user.passwordResetAttempts
+    )
+
+    if (!verification.valid) {
+      // Increment attempts
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          passwordResetAttempts: { increment: 1 },
+        },
+      })
+
+      return NextResponse.json(
+        { error: verification.error },
         { status: 400 }
       )
     }
@@ -30,13 +63,14 @@ export async function POST(request: NextRequest) {
     // Hash new password
     const passwordHash = await hashPassword(validatedData.password)
 
-    // Update password and clear reset token
+    // Update password and clear OTP
     await prisma.user.update({
       where: { id: user.id },
       data: {
         passwordHash,
-        passwordResetToken: null,
+        passwordResetOTP: null,
         passwordResetExpires: null,
+        passwordResetAttempts: 0,
       },
     })
 
@@ -52,9 +86,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Reset password error:', error)
 
-    if (error instanceof Error && error.name === 'ZodError') {
+    if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid password format', details: error.message },
+        { error: 'Invalid request data', details: error.issues },
         { status: 400 }
       )
     }

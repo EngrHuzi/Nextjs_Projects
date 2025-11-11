@@ -1,7 +1,13 @@
+import { AppBackground } from '@/components/layout/AppBackground'
+
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  return <>{children}</>
+  return (
+    <AppBackground>
+      {children}
+    </AppBackground>
+  )
 }

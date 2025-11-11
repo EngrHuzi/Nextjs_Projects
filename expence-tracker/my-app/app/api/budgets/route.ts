@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth/auth'
+import { auth } from '@/lib/auth/auth'
 import { prisma } from '@/lib/prisma'
 import { budgetSchema } from '@/lib/schemas/budget'
 import { Decimal } from 'decimal.js'
@@ -9,7 +8,7 @@ import { z } from 'zod'
 // GET /api/budgets - List budgets with current month spending
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -119,7 +118,7 @@ export async function GET(request: NextRequest) {
 // POST /api/budgets - Create budget
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -131,7 +130,7 @@ export async function POST(request: NextRequest) {
     const validation = budgetSchema.safeParse(body)
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Validation failed', details: validation.error.errors },
+        { error: 'Validation failed', details: validation.error.issues },
         { status: 400 }
       )
     }

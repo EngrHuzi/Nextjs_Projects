@@ -190,8 +190,15 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="p-8">
-        <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-        <p className="text-muted-foreground">Loading dashboard data...</p>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite] mb-4 bg-gradient-to-r from-green-600 to-blue-600"></div>
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-2">
+              Loading Dashboard
+            </h2>
+            <p className="text-muted-foreground">Fetching your financial data...</p>
+          </div>
+        </div>
       </div>
     )
   }
@@ -199,18 +206,31 @@ export default function DashboardPage() {
   if (!dashboardData || !chartData) {
     return (
       <div className="p-8">
-        <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-        <p className="text-muted-foreground">Failed to load dashboard data</p>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Card className="glass-card-strong max-w-md p-8 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-orange-600 shadow-lg">
+              <svg className="h-9 w-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent mb-2">
+              Failed to Load
+            </h2>
+            <p className="text-muted-foreground">Unable to fetch dashboard data. Please try again.</p>
+          </Card>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       {/* Header with Date Range Filter */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Dashboard
+          </h1>
           <p className="text-muted-foreground mt-2">
             Overview of your financial activity
           </p>

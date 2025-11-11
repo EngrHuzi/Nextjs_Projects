@@ -1,7 +1,6 @@
 // T187-T189: API route for category suggestions based on description
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth/auth'
+import { auth } from '@/lib/auth/auth'
 import { prisma } from '@/lib/prisma'
 import { suggestCategoryByKeywords, findHistoricalMatch } from '@/lib/services/categoryKeywords'
 import { z } from 'zod'
@@ -15,7 +14,7 @@ const suggestionRequestSchema = z.object({
 // T187: POST /api/suggestions/category - Suggest category based on description
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -27,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid request', details: validation.error.errors },
+        { error: 'Invalid request', details: validation.error.issues },
         { status: 400 }
       )
     }

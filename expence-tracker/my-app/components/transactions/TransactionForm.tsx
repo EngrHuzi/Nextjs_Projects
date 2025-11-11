@@ -64,7 +64,7 @@ export function TransactionForm({ transaction, onSuccess, onCancel }: Transactio
   const [isLoadingSuggestion, setIsLoadingSuggestion] = useState(false)
   const [suggestionAccepted, setSuggestionAccepted] = useState(false)
 
-  const form = useForm<TransactionInput>({
+  const form = useForm({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
       type: transaction?.type || 'EXPENSE',
@@ -264,7 +264,10 @@ export function TransactionForm({ transaction, onSuccess, onCancel }: Transactio
                   placeholder="0.00"
                   disabled={isSubmitting}
                   {...field}
-                  onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    field.onChange(value === '' ? 0 : parseFloat(value))
+                  }}
                 />
               </FormControl>
               <FormMessage />
@@ -346,7 +349,7 @@ export function TransactionForm({ transaction, onSuccess, onCancel }: Transactio
                   value={
                     field.value instanceof Date
                       ? field.value.toISOString().split('T')[0]
-                      : field.value
+                      : (field.value as string) || ''
                   }
                   onChange={(e) => field.onChange(new Date(e.target.value))}
                 />

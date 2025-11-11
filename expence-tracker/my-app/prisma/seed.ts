@@ -22,7 +22,7 @@ async function main() {
     await prisma.category.upsert({
       where: {
         userId_name_type: {
-          userId: null,
+          userId: null as any,
           name,
           type: 'EXPENSE',
         },
@@ -45,7 +45,7 @@ async function main() {
     await prisma.category.upsert({
       where: {
         userId_name_type: {
-          userId: null,
+          userId: null as any,
           name,
           type: 'INCOME',
         },

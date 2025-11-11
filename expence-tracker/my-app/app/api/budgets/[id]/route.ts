@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth/auth'
+import { auth } from '@/lib/auth/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { Decimal } from 'decimal.js'
@@ -9,8 +8,7 @@ import { Decimal } from 'decimal.js'
 const updateBudgetSchema = z.object({
   amount: z
     .number({
-      required_error: 'Budget amount is required',
-      invalid_type_error: 'Amount must be a number',
+      message: 'Amount must be a number',
     })
     .positive('Amount must be greater than 0')
     .max(1000000, 'Budget amount cannot exceed $1,000,000')
@@ -20,16 +18,16 @@ const updateBudgetSchema = z.object({
 // PUT /api/budgets/[id] - Update budget amount
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params
 
     // Validate UUID
     const uuidSchema = z.string().uuid()
@@ -44,7 +42,7 @@ export async function PUT(
     const validation = updateBudgetSchema.safeParse(body)
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Validation failed', details: validation.error.errors },
+        { error: 'Validation failed', details: validation.error.issues },
         { status: 400 }
       )
     }
@@ -151,16 +149,16 @@ export async function PUT(
 // DELETE /api/budgets/[id] - Delete budget
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params
 
     // Validate UUID
     const uuidSchema = z.string().uuid()

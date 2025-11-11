@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { passwordResetRequestSchema } from '@/lib/schemas/user'
-import { randomUUID } from 'crypto'
+import { generateOTP, generateOTPExpiration } from '@/lib/auth/otp'
+import { sendOTPEmail } from '@/lib/email/mailer'
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,34 +21,38 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           message:
-            'If an account with that email exists, a password reset link has been sent.',
+            'If an account with that email exists, a password reset code has been sent.',
         },
         { status: 200 }
       )
     }
 
-    // Generate reset token
-    const resetToken = randomUUID()
-    const resetExpires = new Date(Date.now() + 60 * 60 * 1000) // 1 hour from now
+    // Generate OTP
+    const otp = generateOTP()
+    const otpExpires = generateOTPExpiration(10) // 10 minutes
 
-    // Store token in database
+    // Store OTP in database
     await prisma.user.update({
       where: { id: user.id },
       data: {
-        passwordResetToken: resetToken,
-        passwordResetExpires: resetExpires,
+        passwordResetOTP: otp,
+        passwordResetExpires: otpExpires,
+        passwordResetAttempts: 0,
       },
     })
 
-    // TODO: Send password reset email (stubbed for MVP)
-    const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${resetToken}`
-    console.log(`[MVP STUB] Password reset email would be sent to: ${user.email}`)
-    console.log(`[MVP STUB] Reset URL: ${resetUrl}`)
+    // Send OTP email
+    const emailResult = await sendOTPEmail(user.email, otp, 'password-reset')
+
+    if (!emailResult.success) {
+      console.error('[FORGOT PASSWORD] Failed to send OTP email:', emailResult.error)
+      // Still return success message for security (don't reveal if email exists)
+    }
 
     return NextResponse.json(
       {
         message:
-          'If an account with that email exists, a password reset link has been sent.',
+          'If an account with that email exists, a password reset code has been sent.',
       },
       { status: 200 }
     )

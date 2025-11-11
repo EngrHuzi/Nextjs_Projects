@@ -238,7 +238,10 @@ export default function BudgetsPage() {
                           variant="outline"
                           size="sm"
                           className="flex-1"
-                          onClick={() => setSelectedBudget(budget)}
+                          onClick={() => {
+                            setSelectedBudget(budget)
+                            setIsEditDialogOpen(true)
+                          }}
                         >
                           <Pencil className="mr-2 h-4 w-4" />
                           Edit
@@ -252,6 +255,7 @@ export default function BudgetsPage() {
                           </DialogDescription>
                         </DialogHeader>
                         <BudgetForm
+                          key={budget.id}
                           budgetId={budget.id}
                           initialAmount={budget.amount}
                           onSuccess={() => {

@@ -49,7 +49,8 @@ export default function RegisterPage() {
       }
 
       toast.success(result.message || 'Registration successful!')
-      router.push('/login')
+      // Redirect to verification page with email as query parameter
+      router.push(`/verify-email?email=${encodeURIComponent(data.email)}`)
     } catch (error) {
       console.error('Registration error:', error)
       toast.error('An unexpected error occurred')
@@ -59,10 +60,23 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md p-6">
+    <div className="relative flex min-h-screen items-center justify-center p-4 overflow-hidden bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+
+      {/* Floating Shapes */}
+      <div className="absolute top-20 right-10 w-72 h-72 bg-purple-300/30 dark:bg-purple-500/20 rounded-full mix-blend-multiply dark:mix-blend-overlay filter blur-xl animate-blob"></div>
+      <div className="absolute bottom-20 left-10 w-72 h-72 bg-green-300/30 dark:bg-green-500/20 rounded-full mix-blend-multiply dark:mix-blend-overlay filter blur-xl animate-blob animation-delay-2000"></div>
+      <div className="absolute top-1/2 left-1/2 w-72 h-72 bg-blue-300/30 dark:bg-blue-500/20 rounded-full mix-blend-multiply dark:mix-blend-overlay filter blur-xl animate-blob animation-delay-4000"></div>
+
+      <Card className="relative w-full max-w-md p-8 shadow-2xl backdrop-blur-sm bg-white/80 dark:bg-gray-900/80 border-white/20">
         <div className="mb-6 text-center">
-          <h1 className="text-2xl font-bold">Create an Account</h1>
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-blue-600 shadow-lg">
+            <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+            </svg>
+          </div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">Create an Account</h1>
           <p className="text-muted-foreground mt-2 text-sm">
             Sign up to start tracking your expenses
           </p>

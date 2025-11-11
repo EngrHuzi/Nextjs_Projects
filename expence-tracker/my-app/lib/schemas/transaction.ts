@@ -3,30 +3,28 @@ import { z } from 'zod'
 // Transaction create/update schema
 export const transactionSchema = z.object({
   type: z.enum(['EXPENSE', 'INCOME'], {
-    required_error: 'Transaction type is required',
+    message: 'Transaction type is required',
   }),
   amount: z
     .number({
-      required_error: 'Amount is required',
-      invalid_type_error: 'Amount must be a number',
+      message: 'Amount must be a number',
     })
     .positive('Amount must be greater than 0')
     .max(99999999.99, 'Amount cannot exceed $99,999,999.99')
     .multipleOf(0.01, 'Amount must have at most 2 decimal places'),
   category: z.string().min(1, 'Category is required').max(100, 'Category name too long'),
-  date: z.coerce
-    .date({
-      required_error: 'Date is required',
-      invalid_type_error: 'Invalid date format',
-    })
-    .max(new Date(), 'Date cannot be in the future'),
+  date: z.coerce.date({
+    message: 'Invalid date format',
+  }).refine((date) => date <= new Date(), {
+    message: 'Date cannot be in the future',
+  }),
   description: z
     .string()
     .max(200, 'Description cannot exceed 200 characters')
     .optional()
     .nullable(),
   paymentMethod: z.enum(['CASH', 'CARD', 'BANK_TRANSFER', 'OTHER'], {
-    required_error: 'Payment method is required',
+    message: 'Payment method is required',
   }),
 })
 
@@ -42,5 +40,5 @@ export const transactionListQuerySchema = z.object({
 })
 
 // Type exports
-export type TransactionInput = z.infer<typeof transactionSchema>
+export type TransactionInput = Omit<z.infer<typeof transactionSchema>, 'date'> & { date: Date }
 export type TransactionListQuery = z.infer<typeof transactionListQuerySchema>

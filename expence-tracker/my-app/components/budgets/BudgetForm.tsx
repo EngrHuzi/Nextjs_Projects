@@ -74,6 +74,13 @@ export function BudgetForm({
     },
   })
 
+  // Reset form when initialAmount changes (for edit mode)
+  useEffect(() => {
+    if (isEditMode && initialAmount !== undefined) {
+      form.setValue('amount', initialAmount.toString())
+    }
+  }, [initialAmount, isEditMode, form])
+
   // Fetch categories
   useEffect(() => {
     async function fetchCategories() {

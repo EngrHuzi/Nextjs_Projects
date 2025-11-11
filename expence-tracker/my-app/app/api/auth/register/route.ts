@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth/password'
 import { userRegistrationSchema } from '@/lib/schemas/user'
+import { sendOTPEmail } from '@/lib/email/mailer'
+import { generateOTP, generateOTPExpiration } from '@/lib/auth/otp'
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,12 +27,19 @@ export async function POST(request: NextRequest) {
     // Hash password
     const passwordHash = await hashPassword(validatedData.password)
 
+    // Generate OTP
+    const otp = generateOTP()
+    const otpExpires = generateOTPExpiration(10) // 10 minutes
+
     // Create user
     const user = await prisma.user.create({
       data: {
         email: validatedData.email,
         passwordHash,
         emailVerified: false,
+        emailVerificationOTP: otp,
+        emailVerificationExpires: otpExpires,
+        emailVerificationAttempts: 0,
       },
       select: {
         id: true,
@@ -40,12 +49,17 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // TODO: Send verification email (stubbed for MVP)
-    console.log(`[MVP STUB] Verification email would be sent to: ${user.email}`)
+    // Send OTP email
+    const emailResult = await sendOTPEmail(user.email, otp, 'verification')
+
+    if (!emailResult.success) {
+      console.error('[REGISTRATION] Failed to send OTP email:', emailResult.error)
+      // Don't fail registration if email fails - user can request new OTP
+    }
 
     return NextResponse.json(
       {
-        message: 'Registration successful. Please check your email to verify your account.',
+        message: 'Registration successful. Please check your email for the verification code.',
         user,
       },
       { status: 201 }

@@ -17,7 +17,14 @@
       "Bash(tasklist:*)",
       "Bash(/c/Users/DELL/Documents/expence-tracker/.specify/scripts/bash/check-prerequisites.sh:*)",
       "Bash(git config:*)",
-      "Bash(npm audit:*)"
+      "Bash(npm audit:*)",
+      "Bash(node -e:*)",
+      "Bash(netstat:*)",
+      "Bash(test:*)",
+      "Bash(npm run build:*)",
+      "Bash(find:*)",
+      "Bash(timeout:*)",
+      "Bash(ping:*)"
     ],
     "deny": [],
     "ask": []

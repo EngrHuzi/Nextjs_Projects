@@ -7,7 +7,7 @@ export const categorySchema = z.object({
     .min(1, 'Category name is required')
     .max(100, 'Category name cannot exceed 100 characters'),
   type: z.enum(['EXPENSE', 'INCOME'], {
-    required_error: 'Category type is required',
+    message: 'Category type is required',
   }),
 })
 

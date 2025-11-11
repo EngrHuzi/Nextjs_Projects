@@ -1,12 +1,19 @@
-import { auth } from '@/lib/auth/auth'
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { getToken } from 'next-auth/jwt'
 
-export default auth((req) => {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
-  const isAuthenticated = !!req.auth
+
+  // Get token without importing heavy auth config
+  const token = await getToken({
+    req,
+    secret: process.env.AUTH_SECRET
+  })
+  const isAuthenticated = !!token
 
   // Public routes that don't require authentication
-  const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password']
+  const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email']
   const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route))
 
   // Auth routes - redirect to dashboard if already logged in
@@ -18,7 +25,7 @@ export default auth((req) => {
   }
 
   // Protected routes - redirect to login if not authenticated
-  const protectedPaths = ['/dashboard', '/transactions', '/categories', '/budgets', '/reports']
+  const protectedPaths = ['/dashboard', '/transactions', '/categories', '/budgets', '/reports', '/settings', '/import']
   const isProtectedRoute = protectedPaths.some((route) => pathname.startsWith(route))
 
   if (isProtectedRoute && !isAuthenticated) {
@@ -28,7 +35,7 @@ export default auth((req) => {
   }
 
   return NextResponse.next()
-})
+}
 
 export const config = {
   matcher: [

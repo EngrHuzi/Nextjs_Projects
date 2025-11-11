@@ -50,9 +50,15 @@ model User {
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 
-  // Password Reset
-  passwordResetToken    String?   @db.VarChar(255)
-  passwordResetExpires  DateTime?
+  // Email Verification OTP
+  emailVerificationOTP      String?   @db.VarChar(6)
+  emailVerificationExpires  DateTime?
+  emailVerificationAttempts Int       @default(0)
+
+  // Password Reset OTP
+  passwordResetOTP          String?   @db.VarChar(6)
+  passwordResetExpires      DateTime?
+  passwordResetAttempts     Int       @default(0)
 
   // Preferences
   budgetAlertsEnabled    Boolean  @default(true)

@@ -81,8 +81,14 @@ export async function GET(request: NextRequest) {
       prisma.transaction.count({ where }),
     ])
 
+    // Convert Decimal amounts to numbers for JSON serialization
+    const serializedTransactions = transactions.map(tx => ({
+      ...tx,
+      amount: tx.amount.toNumber(),
+    }))
+
     return NextResponse.json({
-      transactions,
+      transactions: serializedTransactions,
       pagination: {
         page: validatedQuery.page,
         limit: validatedQuery.limit,
@@ -148,6 +154,12 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    // Convert Decimal amount to number for JSON serialization
+    const serializedTransaction = {
+      ...transaction,
+      amount: transaction.amount.toNumber(),
+    }
+
     // T133: Check budget alert after transaction create (for EXPENSE transactions only)
     if (transaction.type === 'EXPENSE' && transaction.categoryId) {
       const { checkBudgetAlert, storeAlert } = await import('@/lib/services/alertService')
@@ -163,7 +175,7 @@ export async function POST(request: NextRequest) {
         // Return alert in response so UI can display it
         return NextResponse.json(
           {
-            transaction,
+            transaction: serializedTransaction,
             alert: {
               type: alert.type,
               message: alert.message,
@@ -174,7 +186,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json(transaction, { status: 201 })
+    return NextResponse.json(serializedTransaction, { status: 201 })
   } catch (error) {
     console.error('Create transaction error:', error)
 

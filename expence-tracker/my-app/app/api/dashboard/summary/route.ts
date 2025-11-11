@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth/auth'
+import { auth } from '@/lib/auth/auth'
 import { prisma } from '@/lib/prisma'
 import { Decimal } from 'decimal.js'
 import { z } from 'zod'
@@ -14,7 +13,7 @@ const summaryQuerySchema = z.object({
 // T135: GET /api/dashboard/summary - Current month totals, top categories
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -31,7 +30,7 @@ export async function GET(request: NextRequest) {
     const validated = summaryQuerySchema.safeParse(queryParams)
     if (!validated.success) {
       return NextResponse.json(
-        { error: 'Invalid query parameters', details: validated.error.errors },
+        { error: 'Invalid query parameters', details: validated.error.issues },
         { status: 400 }
       )
     }

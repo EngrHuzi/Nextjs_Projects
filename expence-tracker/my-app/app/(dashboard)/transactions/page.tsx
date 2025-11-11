@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/dialog'
 import { Card } from '@/components/ui/card'
 import { toast } from 'sonner'
-import { LogoutButton } from '@/components/LogoutButton'
 import { Download } from 'lucide-react'
 
 interface Transaction {
@@ -202,14 +201,11 @@ export default function TransactionsPage() {
 
   return (
     <div className="container mx-auto p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Transactions</h1>
-          <p className="text-muted-foreground mt-1">
-            Track your income and expenses
-          </p>
-        </div>
-        <LogoutButton />
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold">Transactions</h1>
+        <p className="text-muted-foreground mt-1">
+          Track your income and expenses
+        </p>
       </div>
 
       <Card className="p-6 mb-6">

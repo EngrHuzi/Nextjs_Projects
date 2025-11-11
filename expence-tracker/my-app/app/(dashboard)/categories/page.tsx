@@ -28,7 +28,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
-import { LogoutButton } from '@/components/LogoutButton'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { categorySchema, type CategoryInput } from '@/lib/schemas/category'
@@ -208,14 +207,11 @@ export default function CategoriesPage() {
 
   return (
     <div className="container mx-auto p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Categories</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage your transaction categories
-          </p>
-        </div>
-        <LogoutButton />
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold">Categories</h1>
+        <p className="text-muted-foreground mt-1">
+          Manage your transaction categories
+        </p>
       </div>
 
       <div className="mb-6">

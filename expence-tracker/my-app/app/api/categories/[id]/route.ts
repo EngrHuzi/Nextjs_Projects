@@ -6,7 +6,7 @@ import { categorySchema } from '@/lib/schemas/category'
 // T098: PUT /api/categories/[id] (update category name)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth()
@@ -15,12 +15,13 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const body = await request.json()
     const validatedData = categorySchema.parse(body)
 
     // Check category exists and belongs to user
     const existingCategory = await prisma.category.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!existingCategory) {
@@ -43,7 +44,7 @@ export async function PUT(
     // T100: Check for duplicate name (excluding current category)
     const duplicateCategory = await prisma.category.findFirst({
       where: {
-        id: { not: params.id },
+        id: { not: id },
         OR: [
           {
             userId: session.user.id,
@@ -70,7 +71,7 @@ export async function PUT(
 
     // Update category
     const category = await prisma.category.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         name: validatedData.name,
         type: validatedData.type,
@@ -106,7 +107,7 @@ export async function PUT(
 // T099: DELETE /api/categories/[id] (delete if no transactions)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth()
@@ -115,9 +116,11 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
+
     // Check category exists and belongs to user
     const existingCategory = await prisma.category.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!existingCategory) {
@@ -156,7 +159,7 @@ export async function DELETE(
 
     // Delete category
     await prisma.category.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     return NextResponse.json({ message: 'Category deleted successfully' })

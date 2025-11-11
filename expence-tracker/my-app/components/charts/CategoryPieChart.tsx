@@ -8,6 +8,7 @@ interface PieChartData {
   name: string
   value: number
   percentage: number
+  [key: string]: string | number
 }
 
 interface CategoryPieChartProps {
@@ -73,9 +74,11 @@ export const CategoryPieChart = memo(function CategoryPieChart({ data }: Categor
               cx="50%"
               cy="50%"
               labelLine={false}
-              label={({ name, percentage }) =>
-                percentage > 5 ? `${name} (${percentage.toFixed(0)}%)` : ''
-              }
+              label={(props: any) => {
+                const percentage = props.percentage || (props.payload?.percentage as number)
+                const name = props.name || props.payload?.name
+                return percentage > 5 ? `${name} (${percentage.toFixed(0)}%)` : ''
+              }}
               outerRadius={100}
               fill="#8884d8"
               dataKey="value"
