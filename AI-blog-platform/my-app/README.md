@@ -2,6 +2,8 @@
 
 A modern, full-stack blog platform built with Next.js 15, featuring AI-assisted content creation, comprehensive user management, and a powerful admin dashboard.
 
+🚀 **Live Demo**: [https://aiblogify.vercel.app/](https://aiblogify.vercel.app/)
+
 ## ✨ Features
 
 ### Core Functionality
