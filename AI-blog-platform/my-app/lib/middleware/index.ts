@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server'
 
-export * from './db-connection'
+// Note: db-connection is not exported here because middleware runs in Edge runtime
+// and cannot use Prisma. Import db-connection directly in API routes if needed.
 
 // Simple in-memory rate limiting (use Redis in production)
 export const rateLimitMap = new Map<string, { count: number; resetTime: number }>()

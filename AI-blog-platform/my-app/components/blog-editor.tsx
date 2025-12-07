@@ -161,29 +161,31 @@ export function BlogEditor({ post, onSave, onCancel }: BlogEditorProps) {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">{post ? "Edit Post" : "Create New Post"}</h1>
-        <div className="flex items-center gap-2 flex-wrap justify-end sm:flex-nowrap">
+    <div className="max-w-6xl mx-auto p-4 md:p-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold">{post ? "Edit Post" : "Create New Post"}</h1>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <Button
             variant="outline"
+            size="sm"
             onClick={() => setIsPreview(!isPreview)}
-            className="w-full sm:w-auto"
+            className="flex-1 sm:flex-none"
           >
-            <Eye className="h-4 w-4 mr-2" />
-            {isPreview ? "Edit" : "Preview"}
+            <Eye className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">{isPreview ? "Edit" : "Preview"}</span>
           </Button>
           <Button
             variant="outline"
+            size="sm"
             onClick={onCancel}
-            className="w-full sm:w-auto"
+            className="flex-1 sm:flex-none"
           >
-            Cancel
+            <X className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Cancel</span>
           </Button>
-          <Button onClick={handleSave} className="w-full sm:w-auto whitespace-nowrap">
-            <Save className="h-4 w-4 mr-2" />
-            <span className="hidden xs:inline">Save {status === "PUBLISHED" ? "& Publish" : "Draft"}</span>
-            <span className="inline xs:hidden">Save</span>
+          <Button onClick={handleSave} size="sm" className="flex-1 sm:flex-none">
+            <Save className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Save</span>
           </Button>
         </div>
       </div>
@@ -222,8 +224,10 @@ export function BlogEditor({ post, onSave, onCancel }: BlogEditorProps) {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-3 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
+          {/* Main Editor Column */}
+          <div className="lg:col-span-3 space-y-4 md:space-y-6">
+            {/* Title Input */}
             <div className="space-y-2">
               <Label htmlFor="title">Title *</Label>
               <Input
@@ -231,10 +235,23 @@ export function BlogEditor({ post, onSave, onCancel }: BlogEditorProps) {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Enter post title"
-                className="text-lg"
+                className="text-base md:text-lg"
               />
             </div>
 
+            {/* AI Assistant - Mobile Only (appears after title, before content) */}
+            <div className="lg:hidden">
+              <AIAssistant
+                title={title}
+                content={content}
+                category={category}
+                onTitleSelect={handleTitleSelect}
+                onContentUpdate={handleContentUpdate}
+                onTagsUpdate={handleTagsUpdate}
+              />
+            </div>
+
+            {/* Content Textarea */}
             <div className="space-y-2">
               <Label htmlFor="content">Content *</Label>
               <Textarea
@@ -242,10 +259,11 @@ export function BlogEditor({ post, onSave, onCancel }: BlogEditorProps) {
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Write your post content here..."
-                className="min-h-[400px] resize-none"
+                className="min-h-[300px] md:min-h-[400px] resize-none"
               />
             </div>
 
+            {/* Excerpt Textarea */}
             <div className="space-y-2">
               <Label htmlFor="excerpt">Excerpt</Label>
               <Textarea
@@ -256,9 +274,81 @@ export function BlogEditor({ post, onSave, onCancel }: BlogEditorProps) {
                 className="h-20 resize-none"
               />
             </div>
+
+            {/* Post Settings - Mobile Only */}
+            <div className="lg:hidden">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base md:text-lg">Post Settings</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Status</Label>
+                    <Select value={status} onValueChange={(value: "DRAFT" | "PUBLISHED") => setStatus(value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="DRAFT">Draft</SelectItem>
+                        <SelectItem value="PUBLISHED">Published</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Category *</Label>
+                    <Select value={category} onValueChange={setCategory}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CATEGORIES.map((cat) => (
+                          <SelectItem key={cat} value={cat}>
+                            {cat}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Tags</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={tagInput}
+                        onChange={(e) => setTagInput(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder="Add tag"
+                        className="flex-1"
+                      />
+                      <Button type="button" onClick={handleAddTag} size="sm">
+                        Add
+                      </Button>
+                    </div>
+                    {tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {tags.map((tag) => (
+                          <Badge key={tag} variant="secondary" className="text-xs">
+                            {tag}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveTag(tag)}
+                              className="ml-1 hover:text-destructive"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
 
-          <div className="space-y-6">
+          {/* Sidebar - Desktop Only */}
+          <div className="hidden lg:block space-y-6">
             <AIAssistant
               title={title}
               content={content}

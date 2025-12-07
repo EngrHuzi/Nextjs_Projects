@@ -222,41 +222,60 @@ export function AIAssistant({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-primary" />
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+          <Sparkles className="h-4 w-4 md:h-5 md:w-5 text-primary" />
           AI Assistant
         </CardTitle>
-        <CardDescription>Enhance your blog post with AI-powered suggestions</CardDescription>
+        <CardDescription className="text-xs md:text-sm">Enhance your blog post with AI-powered suggestions</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4 sm:space-y-5">
+      <CardContent className="space-y-3 md:space-y-4">
         {error && (
           <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription className="text-xs md:text-sm">{error}</AlertDescription>
           </Alert>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-          <Button className="w-full justify-center gap-2 whitespace-normal break-words text-center" variant="outline" size="lg" onClick={generateTitleSuggestions} disabled={isLoading && loadingAction !== "titles" ? true : loadingAction === "titles"}>
-            {loadingAction === "titles" ? <Loader2 className="h-5 w-5 animate-spin shrink-0" /> : <Lightbulb className="h-5 w-5 shrink-0" />}
-            <span>Suggest Titles</span>
+        <div className="grid grid-cols-2 lg:grid-cols-1 gap-2">
+          <Button
+            className="w-full justify-start gap-2 text-xs md:text-sm h-auto py-2.5 px-3"
+            variant="outline"
+            onClick={generateTitleSuggestions}
+            disabled={isLoading && loadingAction !== "titles" ? true : loadingAction === "titles"}
+          >
+            {loadingAction === "titles" ? <Loader2 className="h-4 w-4 animate-spin shrink-0" /> : <Lightbulb className="h-4 w-4 shrink-0" />}
+            <span className="truncate">Suggest Titles</span>
           </Button>
 
-          <Button className="w-full justify-center gap-2 whitespace-normal break-words text-center" variant="outline" size="lg" onClick={generateSummary} disabled={isLoading && loadingAction !== "summary" ? true : loadingAction === "summary"}>
-            {loadingAction === "summary" ? <Loader2 className="h-5 w-5 animate-spin shrink-0" /> : <Search className="h-5 w-5 shrink-0" />}
-            <span>Summarize</span>
+          <Button
+            className="w-full justify-start gap-2 text-xs md:text-sm h-auto py-2.5 px-3"
+            variant="outline"
+            onClick={generateSummary}
+            disabled={isLoading && loadingAction !== "summary" ? true : loadingAction === "summary"}
+          >
+            {loadingAction === "summary" ? <Loader2 className="h-4 w-4 animate-spin shrink-0" /> : <Search className="h-4 w-4 shrink-0" />}
+            <span className="truncate">Summarize</span>
           </Button>
 
-          <Button className="w-full justify-center gap-2 whitespace-normal break-words text-center" variant="outline" size="lg" onClick={generateSEOKeywords} disabled={isLoading && loadingAction !== "seo" ? true : loadingAction === "seo"}>
-            {loadingAction === "seo" ? <Loader2 className="h-5 w-5 animate-spin shrink-0" /> : <Search className="h-5 w-5 shrink-0" />}
-            <span>SEO Keywords</span>
+          <Button
+            className="w-full justify-start gap-2 text-xs md:text-sm h-auto py-2.5 px-3"
+            variant="outline"
+            onClick={generateSEOKeywords}
+            disabled={isLoading && loadingAction !== "seo" ? true : loadingAction === "seo"}
+          >
+            {loadingAction === "seo" ? <Loader2 className="h-4 w-4 animate-spin shrink-0" /> : <Search className="h-4 w-4 shrink-0" />}
+            <span className="truncate">SEO Keywords</span>
           </Button>
 
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="w-full justify-center gap-2 whitespace-normal break-words text-center" variant="outline" size="lg" disabled={isLoading && loadingAction !== "improve" ? true : loadingAction === "improve"}>
-                <Wand2 className="h-5 w-5" />
-                <span>Improve Content</span>
+              <Button
+                className="w-full justify-start gap-2 text-xs md:text-sm h-auto py-2.5 px-3"
+                variant="outline"
+                disabled={isLoading && loadingAction !== "improve" ? true : loadingAction === "improve"}
+              >
+                <Wand2 className="h-4 w-4 shrink-0" />
+                <span className="truncate">Improve Content</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[480px]">
@@ -299,17 +318,18 @@ export function AIAssistant({
 
         {titleSuggestions.length > 0 && (
           <div className="space-y-2">
-            <h4 className="font-medium">Title Suggestions</h4>
-            <ScrollArea className="h-40 sm:h-48">
+            <h4 className="font-medium text-sm md:text-base">Title Suggestions</h4>
+            <ScrollArea className="h-40 md:h-48">
               <div className="space-y-2">
                 {titleSuggestions.map((suggestion, index) => (
                   <div key={index} className="p-2 border rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <p className="font-bold text-sm">{suggestion.title}</p>
-                      <div className="flex gap-1">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <p className="font-bold text-xs md:text-sm flex-1 min-w-0 break-words">{suggestion.title}</p>
+                      <div className="flex gap-1 flex-shrink-0">
                         <Button
                           size="sm"
                           variant="ghost"
+                          className="h-7 w-7 p-0"
                           onClick={() => handleCopy(suggestion.title, `title-${index}`)}
                         >
                           {copiedStates[`title-${index}`] ? (
@@ -318,7 +338,7 @@ export function AIAssistant({
                             <Copy className="h-3 w-3" />
                           )}
                         </Button>
-                        <Button size="sm" onClick={() => {
+                        <Button size="sm" className="text-xs" onClick={() => {
                           console.log("Using title:", suggestion.title);
                           onTitleSelect(suggestion.title);
                         }}>
@@ -336,9 +356,9 @@ export function AIAssistant({
 
         {summary && (
           <div className="space-y-2">
-            <h4 className="font-medium">Content Summary</h4>
-            <div className="p-3 bg-muted rounded-lg">
-              <p className="text-sm mb-2">{summary.summary}</p>
+            <h4 className="font-medium text-sm md:text-base">Content Summary</h4>
+            <div className="p-2 md:p-3 bg-muted rounded-lg">
+              <p className="text-xs md:text-sm mb-2">{summary.summary}</p>
               <Separator className="my-2" />
               <div className="space-y-1">
                 <p className="text-xs font-medium">Key Points:</p>
@@ -354,8 +374,8 @@ export function AIAssistant({
 
         {seoData && (
           <div className="space-y-2">
-            <h4 className="font-medium">SEO Suggestions</h4>
-            <div className="p-3 bg-muted rounded-lg space-y-2">
+            <h4 className="font-medium text-sm md:text-base">SEO Suggestions</h4>
+            <div className="p-2 md:p-3 bg-muted rounded-lg space-y-2">
               <div>
                 <p className="text-xs font-medium mb-1">Keywords:</p>
                 <div className="flex flex-wrap gap-1">
@@ -365,7 +385,7 @@ export function AIAssistant({
                     </Badge>
                   ))}
                 </div>
-                <Button size="sm" variant="ghost" className="mt-1" onClick={() => onTagsUpdate(seoData.keywords)}>
+                <Button size="sm" variant="ghost" className="mt-1 text-xs h-7" onClick={() => onTagsUpdate(seoData.keywords)}>
                   Add as Tags
                 </Button>
               </div>

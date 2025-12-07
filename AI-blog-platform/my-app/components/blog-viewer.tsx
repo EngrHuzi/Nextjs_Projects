@@ -25,6 +25,7 @@ interface BlogPost {
   slug: string
 }
 import { CommentSection } from "@/components/comment-section"
+import { ShareButtons } from "@/components/share-buttons"
 import { ArrowLeft, Edit, Clock, Calendar, User } from "lucide-react"
 
 interface BlogViewerProps {
@@ -134,6 +135,15 @@ export function BlogViewer({ post, onBack, onEdit }: BlogViewerProps) {
                 )
               })}
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <ShareButtons
+              title={post.title}
+              slug={post.slug}
+            />
           </CardContent>
         </Card>
 

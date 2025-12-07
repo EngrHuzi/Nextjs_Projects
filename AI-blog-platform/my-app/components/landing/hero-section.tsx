@@ -49,31 +49,31 @@ export function HeroSection() {
   ]
 
   return (
-    <div className="bg-gradient-to-br from-background to-muted">
-      <div className="container mx-auto px-4 py-16">
+    <div className="bg-gradient-to-br from-background to-muted min-h-screen">
+      <div className="container mx-auto px-4 py-8 md:py-16">
         <div className="max-w-6xl mx-auto">
           {/* Hero Section */}
-          <div className="text-center mb-16">
-            <Badge variant="secondary" className="mb-4">
+          <div className="text-center mb-12 md:mb-16">
+            <Badge variant="secondary" className="mb-3 md:mb-4 text-xs md:text-sm">
               <Zap className="h-3 w-3 mr-1" />
               AI-Powered Blogging Platform
             </Badge>
-            <h1 className="text-5xl md:text-6xl font-bold mb-6">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6 px-2">
               Create Amazing Content with{" "}
               <span className="text-primary">AI Assistance</span>
             </h1>
-            <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-              Transform your blogging experience with our AI-powered platform. 
+            <p className="text-base md:text-xl text-muted-foreground mb-6 md:mb-8 max-w-3xl mx-auto px-4">
+              Transform your blogging experience with our AI-powered platform.
               Write better, publish faster, and grow your audience with intelligent content tools.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" asChild>
+            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center px-4">
+              <Button size="lg" asChild className="w-full sm:w-auto">
                 <Link href="/auth">
                   Get Started Free
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" asChild>
+              <Button size="lg" variant="outline" asChild className="w-full sm:w-auto">
                 <Link href="#features">
                   Learn More
                 </Link>
@@ -82,7 +82,7 @@ export function HeroSection() {
           </div>
 
           {/* Features Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-12 md:mb-16">
             {features.map((feature, index) => {
               const Icon = feature.icon
               return (
@@ -102,16 +102,16 @@ export function HeroSection() {
           </div>
 
           {/* Benefits Section */}
-          <div className="grid lg:grid-cols-2 gap-12 items-center mb-16">
-            <div>
-              <h2 className="text-3xl font-bold mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center mb-12 md:mb-16">
+            <div className="px-4">
+              <h2 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">
                 Why Choose Our Platform?
               </h2>
-              <p className="text-lg text-muted-foreground mb-8">
-                Our AI-powered platform combines cutting-edge technology with 
+              <p className="text-base md:text-lg text-muted-foreground mb-6 md:mb-8">
+                Our AI-powered platform combines cutting-edge technology with
                 user-friendly design to help you create exceptional content.
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                 {benefits.map((benefit, index) => (
                   <div key={index} className="flex items-center space-x-3">
                     <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
@@ -140,15 +140,15 @@ export function HeroSection() {
           </div>
 
           {/* CTA Section */}
-          <div className="text-center bg-primary/5 rounded-2xl p-12">
-            <h2 className="text-3xl font-bold mb-4">
+          <div className="text-center bg-primary/5 rounded-2xl p-6 md:p-12 mx-4">
+            <h2 className="text-2xl md:text-3xl font-bold mb-3 md:mb-4">
               Start Your AI-Powered Blogging Journey Today
             </h2>
-            <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-              No credit card required. Get started in minutes and experience 
+            <p className="text-base md:text-lg text-muted-foreground mb-6 md:mb-8 max-w-2xl mx-auto">
+              No credit card required. Get started in minutes and experience
               the future of content creation.
             </p>
-            <Button size="lg" asChild>
+            <Button size="lg" asChild className="w-full sm:w-auto">
               <Link href="/auth">
                 Get Started Now
                 <ArrowRight className="ml-2 h-4 w-4" />

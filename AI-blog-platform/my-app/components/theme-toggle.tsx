@@ -1,43 +1,36 @@
 "use client"
 
 import { useTheme } from "@/contexts/theme-context"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { 
-  Sun, 
-  Moon, 
-  Monitor
-} from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Sun, Moon } from "lucide-react"
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme()
 
-  const themes = [
-    { value: "light", label: "Light", icon: Sun },
-    { value: "dark", label: "Dark", icon: Moon },
-    { value: "system", label: "System", icon: Monitor },
-  ] as const
+  // Determine current effective theme
+  const effectiveTheme = theme === 'system'
+    ? (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+    : theme
+
+  const toggleTheme = () => {
+    if (effectiveTheme === 'light') {
+      setTheme('dark')
+    } else {
+      setTheme('light')
+    }
+  }
 
   return (
-    <ToggleGroup
-      type="single"
-      value={theme}
-      onValueChange={(value) => value && setTheme(value as "light" | "dark" | "system")}
-      className="border rounded-md bg-background/50 backdrop-blur-sm"
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={toggleTheme}
+      className="relative h-9 w-9 rounded-full border border-border/40 bg-background/50 backdrop-blur-sm hover:bg-accent hover:text-accent-foreground transition-all duration-300"
+      title={effectiveTheme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
     >
-      {themes.map((themeOption) => {
-        const Icon = themeOption.icon
-        return (
-          <ToggleGroupItem
-            key={themeOption.value}
-            value={themeOption.value}
-            className="px-2 py-1.5 hover:bg-accent/50 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground"
-            title={themeOption.label}
-          >
-            <Icon className="h-4 w-4" />
-            <span className="sr-only">{themeOption.label}</span>
-          </ToggleGroupItem>
-        )
-      })}
-    </ToggleGroup>
+      <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all duration-300 dark:-rotate-90 dark:scale-0" />
+      <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all duration-300 dark:rotate-0 dark:scale-100" />
+      <span className="sr-only">Toggle theme</span>
+    </Button>
   )
 }

@@ -49,8 +49,8 @@ export function UserMenu() {
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user.name}</p>
-            <p className="text-xs leading-none text-muted-foreground">
+            <p className="text-sm font-medium leading-none truncate" title={user.name}>{user.name}</p>
+            <p className="text-xs leading-none text-muted-foreground truncate" title={user.email}>
               {user.email}
             </p>
             <div className="flex items-center gap-1 mt-1">

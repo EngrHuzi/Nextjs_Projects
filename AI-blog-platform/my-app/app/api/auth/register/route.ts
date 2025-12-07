@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db"
 //import { signJWT } from "@/lib/jwt"
 import { sendOtpEmail } from "@/lib/mailer"
 import { logger } from "@/lib/logger"
-import { withDatabaseConnection } from "@/lib/middleware"
+import { withDatabaseConnection } from "@/lib/middleware/db-connection"
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -76,7 +76,12 @@ export async function POST(request: NextRequest) {
 
     logger.info("User registered successfully; OTP sent", { userId: user.id, role })
     // Do not set auth cookies until email verified
-    return NextResponse.json({ success: true, requiresVerification: true, user: safeUser })
+    return NextResponse.json({
+      success: true,
+      requiresVerification: true,
+      user: safeUser,
+      message: role === "ADMIN" ? "You are the first user - you have been granted admin privileges!" : "Registration successful! Please verify your email."
+    })
   } catch (err) {
     if (err instanceof z.ZodError) {
       return NextResponse.json({ error: err.issues.map((issue) => issue.message).join(", ") }, { status: 400 })

@@ -32,10 +32,10 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [showOtp, setShowOtp] = useState(false)
   const [otp, setOtp] = useState("")
   const [registeredEmail, setRegisteredEmail] = useState("")
-  const [isFirstUser, setIsFirstUser] = useState(false)
   const { register: registerUser, verifyOtp, resendOtp, isLoading } = useAuth()
 
   const {
@@ -50,17 +50,17 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
 
   const onSubmit = async (data: RegisterFormData) => {
     setError(null)
-    
-    // Check if this will be the first user
-    const existingUsers = JSON.parse(localStorage.getItem('users') || '[]')
-    const willBeFirstUser = existingUsers.length === 0
-    setIsFirstUser(willBeFirstUser)
-    
+    setSuccessMessage(null)
+
     const result = await registerUser(data)
-    
+
     if (result.success && result.requiresVerification) {
       setRegisteredEmail(data.email)
       setShowOtp(true)
+      // Show success message if provided
+      if (result.message) {
+        setSuccessMessage(result.message)
+      }
       return
     }
 
@@ -78,14 +78,6 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
         <CardDescription className="text-center">
           Enter your details to create a new account
         </CardDescription>
-        {isFirstUser && (
-          <Alert className="border-amber-200 bg-amber-50">
-            <Crown className="h-4 w-4 text-amber-600" />
-            <AlertDescription className="text-amber-800">
-              You&apos;ll be the first user and will automatically become an admin!
-            </AlertDescription>
-          </Alert>
-        )}
       </CardHeader>
       <CardContent>
         {!showOtp ? (
@@ -93,6 +85,14 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          {successMessage && successMessage.includes('admin') && (
+            <Alert className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
+              <Crown className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+              <AlertDescription className="text-amber-800 dark:text-amber-200">
+                {successMessage}
+              </AlertDescription>
             </Alert>
           )}
           

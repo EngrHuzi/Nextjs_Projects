@@ -17,40 +17,41 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 max-w-screen-2xl items-center">
-        <div className="mr-4 hidden md:flex">
-          <a className="mr-6 flex items-center space-x-2" href="/blog">
-            <PenTool className="h-6 w-6" />
-            <span className="hidden font-bold sm:inline-block">
+      <div className="container flex h-14 max-w-screen-2xl items-center px-4">
+        {/* Logo - Icon on mobile, full on desktop */}
+        <div className="mr-3 md:mr-4 flex items-center flex-shrink-0">
+          <a className="flex items-center gap-2" href="/blog">
+            <PenTool className="h-5 w-5 md:h-6 md:w-6 flex-shrink-0" />
+            <span className="hidden md:inline-block font-bold text-base whitespace-nowrap">
               AI Blog Platform
             </span>
           </a>
         </div>
-        
-        <div className="flex flex-1 items-center justify-between space-x-2">
-          <div className="w-full flex-1 md:w-auto md:flex-none">
-            <nav className="flex items-center space-x-4">
+
+        <div className="flex flex-1 items-center justify-between gap-2 min-w-0">
+          <nav className="flex items-center gap-1 md:gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push('/blog')}
+              className="text-xs md:text-sm font-medium transition-colors hover:text-primary px-2 md:px-4"
+            >
+              <span>Blog</span>
+            </Button>
+            {user?.role === 'ADMIN' && (
               <Button
                 variant="ghost"
-                onClick={() => router.push('/blog')}
-                className="text-sm font-medium transition-colors hover:text-primary"
+                size="sm"
+                onClick={() => router.push('/admin')}
+                className="text-xs md:text-sm font-medium transition-colors hover:text-primary px-2 md:px-4"
               >
-                Blog
+                <Crown className="h-4 w-4 mr-1 md:mr-2 flex-shrink-0" />
+                <span className="hidden sm:inline">Admin</span>
               </Button>
-              {user?.role === 'ADMIN' && (
-                <Button
-                  variant="ghost"
-                  onClick={() => router.push('/admin')}
-                  className="text-sm font-medium transition-colors hover:text-primary"
-                >
-                  <Crown className="h-4 w-4 mr-2" />
-                  Admin
-                </Button>
-              )}
-            </nav>
-          </div>
-          
-          <div className="flex items-center space-x-2">
+            )}
+          </nav>
+
+          <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
             <ThemeToggle />
             <UserMenu />
           </div>

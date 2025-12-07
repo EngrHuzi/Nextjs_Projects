@@ -110,24 +110,24 @@ export function BlogList({ onCreatePost, onEditPost, onViewPost, onMyPosts }: Bl
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6 overflow-x-hidden">
+    <div className="max-w-6xl mx-auto p-4 md:p-6 overflow-x-hidden">
       <CommunityStats />
-      
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
-        <div className="min-w-0">
-          <h1 className="text-3xl font-bold">Community Blog</h1>
-          <p className="text-muted-foreground">Discover and share amazing content from our community</p>
-          <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2 text-sm text-muted-foreground">
+
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 md:gap-4 mb-6">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl md:text-3xl font-bold">Community Blog</h1>
+          <p className="text-sm md:text-base text-muted-foreground">Discover and share amazing content from our community</p>
+          <div className="flex flex-wrap items-center gap-1 md:gap-2 mt-2 text-xs md:text-sm text-muted-foreground">
             <span>{counts.total} published posts</span>
             <span>•</span>
-            <span>From {new Set(posts.map(p => p.author.id)).size} authors</span>
+            <span className="truncate">From {new Set(posts.map(p => p.author.id)).size} authors</span>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={onMyPosts}>
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+          <Button variant="outline" size="sm" onClick={onMyPosts} className="flex-1 sm:flex-none">
             My Posts
           </Button>
-          <Button onClick={onCreatePost}>
+          <Button size="sm" onClick={onCreatePost} className="flex-1 sm:flex-none">
             <Plus className="h-4 w-4 mr-2" />
             Write Post
           </Button>
@@ -179,22 +179,22 @@ export function BlogList({ onCreatePost, onEditPost, onViewPost, onMyPosts }: Bl
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {filteredPosts.map((post) => (
-            <Card key={post.id} className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+            <Card key={post.id} className="hover:shadow-md transition-shadow flex flex-col">
+              <CardHeader className="pb-3">
+                <div className="flex flex-col gap-3">
                   <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <Badge variant={post.status === "PUBLISHED" ? "default" : "secondary"}>
+                    <div className="flex flex-wrap items-center gap-1 md:gap-2 mb-2">
+                      <Badge variant={post.status === "PUBLISHED" ? "default" : "secondary"} className="text-xs">
                         {post.status === "PUBLISHED" ? "Published" : "Draft"}
                       </Badge>
-                      <Badge variant="outline">{post.category}</Badge>
+                      <Badge variant="outline" className="text-xs">{post.category}</Badge>
                     </div>
-                    <CardTitle className="text-xl mb-2 break-words">{post.title}</CardTitle>
-                    <CardDescription className="text-sm break-words">{post.excerpt}</CardDescription>
+                    <CardTitle className="text-lg md:text-xl mb-2 break-words line-clamp-2">{post.title}</CardTitle>
+                    <CardDescription className="text-xs md:text-sm break-words line-clamp-2">{post.excerpt}</CardDescription>
                   </div>
-                  <div className="flex items-center gap-2 sm:ml-4">
+                  <div className="flex items-center gap-1 justify-end">
                     <Button variant="ghost" size="sm" onClick={() => onViewPost(post)}>
                       <Eye className="h-4 w-4" />
                     </Button>
@@ -227,16 +227,18 @@ export function BlogList({ onCreatePost, onEditPost, onViewPost, onMyPosts }: Bl
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-sm text-muted-foreground">
-                  <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-                    <span>By {post.author.name}</span>
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      <span>{post.readTime} min read</span>
+              <CardContent className="pt-0">
+                <div className="flex flex-col gap-2 text-xs md:text-sm text-muted-foreground">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="truncate max-w-[150px] md:max-w-[200px]" title={post.author.name}>By {post.author.name}</span>
+                    <span>•</span>
+                    <div className="flex items-center gap-1 whitespace-nowrap">
+                      <Clock className="h-3 w-3 flex-shrink-0" />
+                      <span>{post.readTime} min</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
+                    <span className="hidden sm:inline">•</span>
+                    <div className="flex items-center gap-1 whitespace-nowrap">
+                      <Calendar className="h-3 w-3 flex-shrink-0" />
                       <span>
                         {post.status === "PUBLISHED" && post.publishedAt
                           ? formatDate(post.publishedAt)

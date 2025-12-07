@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/db"
 import { signJWT } from "@/lib/jwt"
 import { logger } from "@/lib/logger"
-import { withDatabaseConnection } from "@/lib/middleware"
+import { withDatabaseConnection } from "@/lib/middleware/db-connection"
 
 const loginSchema = z.object({
   email: z.string().email(),

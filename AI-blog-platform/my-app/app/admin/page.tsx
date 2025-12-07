@@ -141,31 +141,32 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="bg-gradient-to-br from-background to-muted">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Admin Dashboard</h1>
-          <p className="text-muted-foreground">
+    <div className="bg-gradient-to-br from-background to-muted min-h-screen">
+      <div className="container mx-auto px-4 py-6 md:py-8">
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-4xl font-bold text-foreground mb-2">Admin Dashboard</h1>
+          <p className="text-sm md:text-base text-muted-foreground">
             Manage users, posts, and platform settings
           </p>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Overview
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-1">
+            <TabsTrigger value="overview" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm">
+              <BarChart3 className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Overview</span>
+              <span className="sm:hidden">Stats</span>
             </TabsTrigger>
-            <TabsTrigger value="users" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
+            <TabsTrigger value="users" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm">
+              <Users className="h-3 w-3 md:h-4 md:w-4" />
               Users
             </TabsTrigger>
-            <TabsTrigger value="posts" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
+            <TabsTrigger value="posts" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm">
+              <FileText className="h-3 w-3 md:h-4 md:w-4" />
               Posts
             </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
+            <TabsTrigger value="settings" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm">
+              <Settings className="h-3 w-3 md:h-4 md:w-4" />
               Settings
             </TabsTrigger>
           </TabsList>

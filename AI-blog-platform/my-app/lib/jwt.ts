@@ -1,5 +1,4 @@
 import { SignJWT, jwtVerify } from 'jose';
-import { logger } from './logger';
 
 export interface JWTPayload {
   sub: string; // subject (user id)
@@ -11,10 +10,10 @@ export interface JWTPayload {
 }
 
 const ACCESS_SECRET = new TextEncoder().encode(
-  process.env.AUTH_ACCESS_SECRET || process.env.AUTH_SECRET || 'fallback-secret-do-not-use-in-production'
+  process.env.AUTH_ACCESS_SECRET || process.env.AUTH_SECRET || process.env.JWT_SECRET || 'fallback-secret-do-not-use-in-production'
 );
 const REFRESH_SECRET = new TextEncoder().encode(
-  process.env.AUTH_REFRESH_SECRET || process.env.AUTH_SECRET || 'fallback-secret-do-not-use-in-production'
+  process.env.AUTH_REFRESH_SECRET || process.env.AUTH_SECRET || process.env.JWT_SECRET || 'fallback-secret-do-not-use-in-production'
 );
 
 const DEFAULT_ACCESS_EXPIRY = process.env.AUTH_ACCESS_EXPIRY || '15m';
@@ -25,16 +24,16 @@ export async function signJWT(payload: Omit<JWTPayload, 'iat' | 'exp'>, opts?: {
     const type = opts?.type || 'access'
     const expiry = opts?.expiry || (type === 'access' ? DEFAULT_ACCESS_EXPIRY : DEFAULT_REFRESH_EXPIRY)
     const secret = type === 'access' ? ACCESS_SECRET : REFRESH_SECRET
-    
+
     const token = await new SignJWT({ ...payload })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
       .setExpirationTime(expiry)
       .sign(secret);
-    
+
     return token;
   } catch (error) {
-    logger.error('Error signing JWT', { error });
+    console.error('Error signing JWT:', error);
     throw new Error('Failed to sign JWT');
   }
 }
@@ -44,7 +43,10 @@ export async function verifyJWT(token: string): Promise<JWTPayload> {
     const { payload } = await jwtVerify(token, ACCESS_SECRET);
     return payload as unknown as JWTPayload;
   } catch (error) {
-    logger.error('Error verifying JWT', { error });
+    // Don't log in production to avoid console spam
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error verifying JWT:', error);
+    }
     throw new Error('Invalid token');
   }
 }
@@ -54,7 +56,9 @@ export async function verifyRefreshJWT(token: string): Promise<JWTPayload> {
     const { payload } = await jwtVerify(token, REFRESH_SECRET);
     return payload as unknown as JWTPayload;
   } catch (error) {
-    logger.error('Error verifying refresh JWT', { error });
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error verifying refresh JWT:', error);
+    }
     throw new Error('Invalid token');
   }
 }

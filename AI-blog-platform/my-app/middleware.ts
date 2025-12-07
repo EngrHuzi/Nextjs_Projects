@@ -23,35 +23,36 @@ const publicPaths = [
 ]
 
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
-  
-  // Rate limiting for auth and admin routes (more lenient in development)
-  if (pathname.startsWith('/api/auth/') || pathname.startsWith('/api/admin/')) {
-    const identifier = getRateLimitIdentifier(request)
-    const isAuthRoute = pathname.startsWith('/api/auth/')
-    const isDevelopment = process.env.NODE_ENV === 'development'
-    
-    // Skip rate limiting for registration in development to avoid issues
-    if (isDevelopment && pathname === '/api/auth/register') {
-      // Skip rate limiting for registration in development
-    } else {
-      // More lenient limits for development
-      const limit = isDevelopment 
-        ? (isAuthRoute ? 50 : 200)  // 50 for auth, 200 for admin in dev
-        : (isAuthRoute ? 10 : 50)   // 10 for auth, 50 for admin in production
-      const windowMs = 15 * 60 * 1000 // 15 minutes
-      
-      if (!rateLimit(identifier, limit, windowMs)) {
-        return NextResponse.json(
-          { 
-            error: 'Too many requests. Please try again later.',
-            retryAfter: Math.ceil(windowMs / 1000) // seconds
-          },
-          { status: 429 }
-        )
+  try {
+    const { pathname } = request.nextUrl
+
+    // Rate limiting for auth and admin routes (more lenient in development)
+    if (pathname.startsWith('/api/auth/') || pathname.startsWith('/api/admin/')) {
+      const identifier = getRateLimitIdentifier(request)
+      const isAuthRoute = pathname.startsWith('/api/auth/')
+      const isDevelopment = process.env.NODE_ENV === 'development'
+
+      // Skip rate limiting for registration in development to avoid issues
+      if (isDevelopment && pathname === '/api/auth/register') {
+        // Skip rate limiting for registration in development
+      } else {
+        // More lenient limits for development
+        const limit = isDevelopment
+          ? (isAuthRoute ? 50 : 200)  // 50 for auth, 200 for admin in dev
+          : (isAuthRoute ? 10 : 50)   // 10 for auth, 50 for admin in production
+        const windowMs = 15 * 60 * 1000 // 15 minutes
+
+        if (!rateLimit(identifier, limit, windowMs)) {
+          return NextResponse.json(
+            {
+              error: 'Too many requests. Please try again later.',
+              retryAfter: Math.ceil(windowMs / 1000) // seconds
+            },
+            { status: 429 }
+          )
+        }
       }
     }
-  }
   
   // Security headers
   const response = NextResponse.next()
@@ -100,19 +101,19 @@ export async function middleware(request: NextRequest) {
     try {
       // Verify JWT token
       const payload = await verifyJWT(token)
-      
+
       // Check if admin path and user is admin
-      if ((pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) && 
+      if ((pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) &&
           payload.role !== 'ADMIN') {
         // Redirect to home page for browser requests
         if (request.headers.get('accept')?.includes('text/html')) {
           return NextResponse.redirect(new URL('/', request.url))
         }
-        
+
         // Return 403 for API requests
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
       }
-      
+
       // User is authenticated and authorized
       return response
     } catch (error) {
@@ -123,14 +124,20 @@ export async function middleware(request: NextRequest) {
         url.searchParams.set('from', pathname)
         return NextResponse.redirect(url)
       }
-      
+
       // Return 401 for API requests
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
   }
-  
+
   // For all other paths, proceed normally
   return response
+  } catch (error) {
+    // Catch-all error handler for any middleware failures
+    console.error('Middleware error:', error)
+    // Return response to allow request to proceed
+    return NextResponse.next()
+  }
 }
 
 export const config = {

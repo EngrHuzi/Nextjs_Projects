@@ -192,14 +192,14 @@ export function AdminUsersTable({ onUserUpdate }: AdminUsersTableProps) {
           </Select>
         </div>
 
-        <div className="rounded-md border">
+        <div className="rounded-md border overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Joined</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="min-w-[200px]">User</TableHead>
+                <TableHead className="min-w-[100px]">Role</TableHead>
+                <TableHead className="min-w-[120px]">Joined</TableHead>
+                <TableHead className="text-right min-w-[100px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
